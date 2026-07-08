@@ -16,9 +16,13 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from pages.views import home_page_view  # 1. Import your view here
+from pages import views 
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('', home_page_view, name='home'), # 2. Empty string means the root homepage
+    # Change 'admin.site.get_admin_urls' to 'admin.site.urls'
+    path('admin/', admin.site.urls), 
+    
+    # Your search paths:
+    path('athlete/id/<int:athlete_id>/', views.display_athlete, name='athlete_by_id'),
+    path('athlete/name/<str:athlete_name>/', views.display_athlete, name='athlete_by_name'),
 ]
