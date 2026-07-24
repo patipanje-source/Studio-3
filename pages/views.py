@@ -2,6 +2,8 @@ from django.http import HttpResponse
 from django.http import HttpResponse
 from django.db.models import Q
 from .models import Athlete
+from django.shortcuts import render
+
 
 def home_page_view(request):
     return HttpResponse("Hello, World! This is my first Django app.")
@@ -30,3 +32,11 @@ def display_athlete(request, athlete_id=None, athlete_name=None):
         )
     else:
         return HttpResponse("Athlete not found in the database.")
+
+
+def display_all_athletes(request):
+    athletes = Athlete.objects.all()
+
+    return render(request, 'athletes.html', {
+        'athletes': athletes
+    })
