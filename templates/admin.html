@@ -1028,20 +1028,12 @@
             </div>
         `;
 
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
             const response = await fetch(form.action, {
                 method: 'POST',
                 body: new FormData(form),
             });
-
-            if (response.ok) {
-                console.log('Saved successfully!');
-            } else {
-                console.error('Failed to save:', await response.text());
-                alert('Save failed!');
-            }
         });
 
         container.appendChild(form);
