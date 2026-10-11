@@ -1,0 +1,1125 @@
+{% load static %}
+{% load mapbox_location_field_tags %}
+{% location_field_includes %}
+{% include_jquery %}
+
+<!doctype html>
+<html lang="en">
+<head>
+    <script src="https://api.mapbox.com/mapbox-gl-js/v3.32.0/mapbox-gl.js"></script>
+    <link href="https://api.mapbox.com/mapbox-gl-js/v3.32.0/mapbox-gl.css" rel="stylesheet" />
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
+    <link rel="stylesheet" href="{% static 'style.css' %}" />
+    <title>Paralympic - Management Panel</title>
+    {{add_event_form.media}}
+    {{edit_event_form.media}}
+</head>
+
+<body>
+    <dialog id="edit-user-popup" class="window">
+        <h3>Edit Event</h3>
+        <form action="{{request.path}}" class="user-form"  method="POST" enctype="multipart/form-data"> {% csrf_token %}
+            <input type="hidden" name="Action" value="editUser">
+            <input type="hidden" name="e-username" id="e-username">
+            <div>
+                <div>
+                    <label for="username">Username</label><br>
+                    <input id="username" name="username" placeholder="Username"/>
+
+                    <label for="email">Email</label><br>
+                    <input id="email" name="email" placeholder="Email"/>
+                    
+                    <label for="staff">Staff</label><br>
+                    <input type="checkbox" id="staff" name="staff">
+                </div>
+                <div style="margin-top: 3vh;">
+                    <button type="submit">Save</button>
+                    <button type="button" onclick="this.closest('dialog').close()">Cancel</button>
+                </div>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog id="del-user-popup" class="window">
+        <form action="{{request.path}}" class="user-form"  method="POST"> {% csrf_token %}
+            <input type="hidden" name="Action" value="delUser">
+            <input type="hidden" name="d-username" id="d-username">
+            <h3>Are you sure?</h3>
+            <p>Delete "<span id="username2"></span>" ?</p>
+            <div style="margin-top: 3vh;">
+                <button type="submit">Yes</button>
+                <button type="button" onclick="this.closest('dialog').close()">Cancel</button>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog id="edit-result-popup" class="window">
+        <h3 style="width: 100%;">Edit Result | "<span id="eventname"></span>"
+            (No. <span id="res-number2"></span>)</h3>
+        <div id="res-athletes">
+        </div>
+        <div id="res-btns">
+            <button type="button" onclick="">Calculate best score(s)</button>
+            <button type="button" onclick="this.closest('dialog').close()">Close</button>
+        </div>
+    </dialog>
+
+    <dialog id="add-event-popup" class="window">
+        <h3>Add Event</h3>
+        <form action="{{request.path}}" class="event-form"  method="POST" enctype="multipart/form-data"> {% csrf_token %}
+            <input type="hidden" name="Action" value="addEvent">
+            <div class="form-side-separator">
+                <div>
+                    <label for="number">No.</label><br>
+                    <input id="number" name="number" placeholder="Event number"/>
+
+                    <label for="eventname">Event name</label><br>
+                    <input id="eventname" name="eventname" placeholder="Event name"/>
+
+                    <label for="sport">Sport</label><br>
+                    <select id="sport" name="sport">
+                        {% for sport in sports %}
+                            <option value="{{sport.sport_code}}">{{sport.sport_type}} ({{sport.sport_code}})</option>
+                        {% endfor %}
+                    </select>
+
+                    <label for="score">Score</label><br>
+                    <select id="score" name="score">
+                        <option value="time">Time</option>
+                        <option value="distance">Distance / Mark</option>
+                        <option value="points">Points</option>
+                        <option value="sets">Sets / Games</option>
+                    </select>
+
+                    <label for="status">Status</label><br>
+                    <select id="status" name="status">
+                        <option value="Scheduled">Scheduled</option>
+                        <option value="Live">Live</option>
+                        <option value="Completed">Completed</option>
+                    </select>
+
+                    <label for="stage">Stage</label><br>
+                    <select id="stage" name="stage">
+                        <option value="Heats">Heats</option>
+                        <option value="Semifinals">Semifinals</option>
+                        <option value="Final">Final</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="add-map">Location</label><br>
+                    {{add_event_form.location}}
+
+                    <label for="datetime">Date & time</label><br>
+                    <input type="datetime-local" id="datetime" name="datetime"/>
+
+                    <label for="eventgender">Gender</label><br>
+                    <select id="eventgender" name="eventgender">
+                        <option value="M">Male</option>
+                        <option value="F">Female</option>
+                    </select>
+
+                    <label for="eventclass">Classification</label><br>
+                    <input id="eventclass" name="eventclass" placeholder="Event classification"/>
+
+                    <label for="rem">Remark</label><br>
+                    <input id="rem" name="rem" placeholder="Event remark"/>
+
+                    <div style="margin-top: 3vh;">
+                        <button type="submit">Add</button>
+                        <button type="button" onclick="this.closest('dialog').close()">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog id="people-event-popup" class="window">
+        <form action="{{request.path}}" class="event-form"  method="POST" enctype="multipart/form-data"> {% csrf_token %}
+            <input type="hidden" name="Action" value="peopleEvent">
+            <input type="hidden" name="number" id="number">
+            <div id="selected-aths"></div>
+
+            <div>
+                <div>
+                    <h3>Participating Athletes | "<span id="eventname"></span>"
+                        (No. <span id="number2"></span>) ?</h3>
+                    <table>
+                        <tr>
+                            <th>Order</th>
+                            <th>BIB</th>
+                            <th>Name</th>
+                            <th>Gender</th>
+                            <th>Classification</th>
+                            <th>Country</th>
+                            <th>Remove</th>
+                        </tr>
+
+                        <tbody id="event-athletes">
+                        </tbody>
+                    </table>
+                </div>
+                <div>
+                    <h3>Athletes</h3>
+                        <table>
+                            <tr>
+                                <th>BIB</th>
+                                <th>Name</th>
+                                <th>Gender</th>
+                                <th>Classification</th>
+                                <th>Country</th>
+                                <th>Add</th>
+                            </tr>
+
+                            <tbody id="no-event-athletes">
+                            </tbody>
+                        </table>
+
+                    <div style="margin-top: 3vh;">
+                        <button type="submit">Save</button>
+                        <button type="button" onclick="this.closest('dialog').close()">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog id="edit-event-popup" class="window">
+        <h3>Edit Event</h3>
+        <form action="{{request.path}}" class="event-form"  method="POST" enctype="multipart/form-data"> {% csrf_token %}
+            <input type="hidden" name="Action" value="editEvent">
+            <input type="hidden" name="e-number" id="e-number">
+            <div class="form-side-separator">
+                <div>
+                    <label for="number">No.</label><br>
+                    <input id="number" name="number" placeholder="Event number"/>
+
+                    <label for="eventname">Event name</label><br>
+                    <input id="eventname" name="eventname" placeholder="Event name"/>
+
+                    <label for="sport">Sport</label><br>
+                    <select id="sport" name="sport">
+                        {% for sport in sports %}
+                            <option value="{{sport.sport_code}}">{{sport.sport_type}} ({{sport.sport_code}})</option>
+                        {% endfor %}
+                    </select>
+
+                    <label for="score">Score</label><br>
+                    <select id="score" name="score">
+                        <option value="time">Time</option>
+                        <option value="distance">Distance / Mark</option>
+                        <option value="points">Points</option>
+                        <option value="sets">Sets / Games</option>
+                    </select>
+
+                    <label for="status">Status</label><br>
+                    <select id="status" name="status">
+                        <option value="Scheduled">Scheduled</option>
+                        <option value="Live">Live</option>
+                        <option value="Completed">Completed</option>
+                    </select>
+
+                    <label for="stage">Stage</label><br>
+                    <select id="stage" name="stage">
+                        <option value="Heats">Heats</option>
+                        <option value="Semifinals">Semifinals</option>
+                        <option value="Final">Final</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="edit-map">Location</label><br>
+                    {{edit_event_form.location}}
+
+                    <label for="datetime">Date & time</label><br>
+                    <input type="datetime-local" id="datetime" name="datetime"/>
+
+                    <label for="eventgender">Gender</label><br>
+                    <select id="eventgender" name="eventgender">
+                        <option value="M">Male</option>
+                        <option value="F">Female</option>
+                    </select>
+
+                    <label for="eventclass">Classification</label><br>
+                    <input id="eventclass" name="eventclass" placeholder="Event classification"/>
+
+                    <label for="rem">Remark</label><br>
+                    <input id="rem" name="rem" placeholder="Event remark"/>
+
+                    <div style="margin-top: 3vh;">
+                        <button type="submit">Save</button>
+                        <button type="button" onclick="this.closest('dialog').close()">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog id="del-event-popup" class="window">
+        <form action="{{request.path}}" class="event-form"  method="POST"> {% csrf_token %}
+            <input type="hidden" name="Action" value="delEvent">
+            <input type="hidden" name="d-number" id="d-number">
+            <h3>Are you sure?</h3>
+            <p>Delete "<span id="eventname"></span>"
+                (No. <span id="number"></span>) ?</p>
+            <div style="margin-top: 3vh;">
+                <button type="submit">Yes</button>
+                <button type="button" onclick="this.closest('dialog').close()">Cancel</button>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog id="add-athlete-popup" class="window">
+        <h3>Add Athlete</h3>
+        <form action="{{request.path}}" class="athlete-form"  method="POST" enctype="multipart/form-data"> {% csrf_token %}
+            <input type="hidden" name="Action" value="addAthlete">
+            <div class="form-side-separator">
+                <div>
+                    <label for="email">Email address</label><br>
+                    <input id="email" name="email" placeholder="Email address"/>
+
+                    <label for="firstname">First name</label><br>
+                    <input id="firstname" name="firstname" placeholder="First name"/>
+
+                    <label for="lastname">Last name</label><br>
+                    <input id="lastname" name="lastname" placeholder="Last name"/>
+                    
+                    <label for="gender">Gender</label><br>
+                    <select id="gender" name="gender">
+                        <option value="M">Male</option>
+                        <option value="F">Female</option>
+                    </select>
+
+                    <label for="dob">Date of birth</label><br>
+                    <input type="date" id="dob" name="dob"/>
+                    
+                    <label for="pfp-picker">Profile Image</label><br>
+                    <input type="file" id="pfp-picker" name="pfp" accept=".jpg, .jpeg, .png"/>
+                </div>
+                <div>
+                    <label for="country">Country</label><br>
+                    <select id="country" name="country"></select>
+
+                    <label for="bib">BIB</label><br>
+                    <input id="bib" name="bib" placeholder="e.g. 101"/>
+
+                    <label for="phone">Phone Number</label><br>
+                    <input id="phone" name="phone" placeholder="e.g. 0801234567"/>
+                    
+                    <label for="classification">Classification</label><br>
+                    <input id="classification" name="classification" placeholder="e.g. T67"/>
+
+                    <label for="rem">Remark</label><br>
+                    <input id="rem" name="rem" placeholder="e.g. Event number"/>
+
+                    <div style="margin-top: 3vh;">
+                        <button type="submit">Add</button>
+                        <button type="button" onclick="this.closest('dialog').close()">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog id="edit-athlete-popup" class="window">
+        <h3>Edit Athlete</h3>
+        <form action="{{request.path}}" class="athlete-form"  method="POST" enctype="multipart/form-data"> {% csrf_token %}
+            <input type="hidden" name="Action" value="editAthlete">
+            <input type="hidden" name="e-bib" id="e-bib">
+
+            <div class="form-side-separator">
+                <div>
+                    <label for="email">Email address</label><br>
+                    <input id="email" name="email" placeholder="Email address"/>
+
+                    <label for="firstname">First name</label><br>
+                    <input id="firstname" name="firstname" placeholder="First name"/>
+
+                    <label for="lastname">Last name</label><br>
+                    <input id="lastname" name="lastname" placeholder="Last name"/>
+                    
+                    <label for="gender">Gender</label><br>
+                    <select id="gender" name="gender">
+                        <option value="M">Male</option>
+                        <option value="F">Female</option>
+                    </select>
+
+                    <label for="dob">Date of birth</label><br>
+                    <input type="date" id="dob" name="dob"/>
+                    
+                    <label for="pfp-picker">Profile Image</label><br>
+                    <input type="file" id="pfp-picker" name="pfp" accept=".jpg, .jpeg, .png"/>
+                </div>
+                <div>
+                    <label for="country">Country</label><br>
+                    <select id="country" name="country"></select>
+
+                    <label for="bib">BIB</label><br>
+                    <input id="bib" name="bib" placeholder="e.g. 101"/>
+
+                    <label for="phone">Phone Number</label><br>
+                    <input id="phone" name="phone" placeholder="e.g. 0801234567"/>
+                    
+                    <label for="classification">Classification</label><br>
+                    <input id="classification" name="classification" placeholder="e.g. T67"/>
+
+                    <label for="rem">Remark</label><br>
+                    <input id="rem" name="rem" placeholder="e.g. Event number"/>
+
+                    <div style="margin-top: 3vh;">
+                        <button type="submit">Save</button>
+                        <button type="button" onclick="this.closest('dialog').close()">Cancel</button>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </dialog>
+
+    <dialog id="del-athlete-popup" class="window">
+        <form action="{{request.path}}" class="athlete-form"  method="POST"> {% csrf_token %}
+            <input type="hidden" name="Action" value="delAthlete">
+            <input type="hidden" name="d-bib" id="d-bib">
+            <h3>Are you sure?</h3>
+            <p>Delete "<span id="firstname"></span> <span id="lastname"></span>"
+                (BIB: <span id="bib"></span>) ?</p>
+            <div style="margin-top: 3vh;">
+                <button type="submit">Yes</button>
+                <button type="button" onclick="this.closest('dialog').close()">Cancel</button>
+            </div>
+        </form>
+    </dialog>
+
+    <div id="wrapper">
+        <h2>MANAGEMENT PANEL</h2>  
+        
+        <div id="management-wrapper">
+            <div id="nav" class="window" data-panel="{{route}}">
+                <div>
+                <h3>[ Staff ]</h3>
+                    <a data-mbtn="athletes" href="{% url 'admin' route='athletes' %}">Athletes</a>
+                    <a data-mbtn="events" href="{% url 'admin' route='events' %}">Events</a>
+                    <a data-mbtn="results" href="{% url 'admin' route='results' %}">Results</a>
+                </div>
+                
+                {% if request.user.is_superuser %}
+                    <div>
+                        <h3>[ Admin ]</h3>
+                        <a data-mbtn="users" href="{% url 'admin' route='users' %}">Users</a>
+                    </div>
+                {% endif %}
+            </div>
+            <div id="management-container" class="window">
+                {% if route == 'users'%}
+                    <form class="searchbar" action="{{request.path}}" method="GET">
+                        <input type="hidden" name="Action" value="findUser">
+                        <input type="search" placeholder="Search in Users" id="users-searchbar" name="find"
+                        <select id="role-filter" name="role">
+                            <option value="all" {% if role == 'all' %}selected{% endif %}>All</option>
+                            <option value="admin" {% if role == 'admin' %}selected{% endif %}>Admin</option>
+                            <option value="staff" {% if role == 'staff' %}selected{% endif %}>Staff</option>
+                            <option value="user" {% if role == 'user' %}selected{% endif %}>User</option>
+                        </select>
+                    </form>
+                    <table>
+                        <tr>
+                            <th >Username</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Actions</th>
+                        </tr>
+                        {% if users|length == 0 %}
+                            <tr>
+                                <td colspan="5">No users found.</td>
+                            </tr>
+                        {% else %}
+                            {% for user in users %}
+                                <tr>
+                                    <td>{{user.username}}</td>
+                                    <td>{{user.email}}</td>
+                                    <td>
+                                        {%if user.is_superuser %}Admin
+                                        {%elif user.is_staff %}Staff
+                                        {%else%}User
+                                        {%endif%}
+                                    </td>
+                                    <td>
+                                        {# Edit button #}
+                                        {% if user == request.user %}
+                                            <button class="edit-user-btn"
+                                                    data-username="{{ user.username }}"
+                                                    data-email="{{ user.email }}"
+                                                    data-staff="{{ user.is_staff }}"
+                                                    data-superuser="{{ user.is_superuser }}">
+                                                <img src="{% static 'btnIcon/edit.png' %}"
+                                                    style="width: 20px; height: 20px;">
+                                            </button>
+                                        {% elif request.user.is_superuser %}
+                                            {% if not user.is_superuser %}
+                                                <button class="edit-user-btn"
+                                                        data-username="{{ user.username }}"
+                                                        data-email="{{ user.email }}"
+                                                        data-staff="{{ user.is_staff }}"
+                                                        data-superuser="{{ user.is_superuser }}">
+                                                    <img src="{% static 'btnIcon/edit.png' %}"
+                                                        style="width: 20px; height: 20px;">
+                                                </button>
+                                            {% endif %}
+                                        {% endif %}
+
+                                        {# Delete button #}
+                                        {% if user != request.user %}
+                                            {% if request.user.is_superuser %}
+                                                {% if not user.is_superuser %}
+                                                    <button class="del-user-btn"
+                                                            data-username="{{ user.username }}">
+                                                        <img src="{% static 'btnIcon/delete.png' %}"
+                                                            style="width: 20px; height: 20px;">
+                                                    </button>
+                                                {% endif %}
+                                            {% endif %}
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% endif %}
+                    </table>
+                {% elif route == 'athletes' or route == ''%}
+                    <form class="searchbar" action="{{request.path}}" method="GET">
+                        <input type="hidden" name="Action" value="findAthlete">
+                        <input type="search" placeholder="Search in Athletes" id="athletes-searchbar" name="find">
+                        <select id="country-filter" name="country"><option value="all">All</option></select>
+                    </form>
+                    <button onclick="document.querySelector('#add-athlete-popup').showModal()">
+                        {% comment %} <img src="{% static 'btnIcon/plus.png' %}" style="width: 12px; height: 12px;"> {% endcomment %}
+                        Add Athlete
+                    </button>
+                    <table>
+                        <tr>
+                            <th>BIB</th>
+                            <th>Name</th>
+                            <th>Gender</th>
+                            <th>Classification</th>
+                            <th>Country</th>
+                            <th>Actions</th>
+                        </tr>
+                        {% if athletes|length == 0 %}
+                            <tr>
+                                <td colspan="7">No athletes found.</td>
+                            </tr>
+                        {% else %}
+                            {% for athlete in athletes %}
+                                <tr>
+                                    <td>{{athlete.bib}}</td>
+                                    <td>
+                                        {% if athlete.imgProfile %}
+                                            <img src="{{ athlete.imgProfile.url }}" style="width: 32px; height: 32px;">
+                                        {% endif %}
+                                        {{athlete.firstName}} {{athlete.lastName}}
+                                    </td>
+                                    <td>{{athlete.gender}}</td>
+                                    <td>{{athlete.classification}}</td>
+                                    <td>{{athlete.country}}</td>
+                                    <td>
+                                        <button class="edit-athlete-btn"
+                                        data-email="{{athlete.email}}"
+                                        data-firstname="{{athlete.firstName}}"
+                                        data-lastname="{{athlete.lastName}}"
+                                        data-gender="{{athlete.gender}}"
+                                        data-dob="{{athlete.dob}}"
+                                        data-country="{{athlete.country}}"
+                                        data-bib="{{athlete.bib}}"
+                                        data-phone="{{athlete.phone}}"
+                                        data-classification="{{athlete.classification}}"
+                                        data-rem="{{athlete.remark}}">
+                                        <img src="{% static 'btnIcon/edit.png' %}" style="width: 20px; height: 20px;"></button>
+                                        <button class="del-athlete-btn" data-bib="{{athlete.bib}}" data-firstname="{{athlete.firstName}}" data-lastname="{{athlete.lastName}}">
+                                            <img src="{% static 'btnIcon/delete.png' %}" style="width: 20px; height: 20px;">
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% endif %}
+                    </table>
+                {% elif route == 'events' %}
+                    <form class="searchbar" action="{{request.path}}" method="GET">
+                        <input type="hidden" name="Action" value="findEvent">
+                        <input type="search" placeholder="Search in Events" id="event-searchbar" name="find">
+                    </form>
+                    <button class="add-event-btn" onclick="document.querySelector('#add-event-popup').showModal()">
+                        {% comment %} <img src="{% static 'btnIcon/plus.png' %}" style="width: 12px; height: 12px;"> {% endcomment %}
+                        Add Event
+                    </button>
+                    <table>
+                        <tr>                                
+                            <th>Date & Time</th>
+                            <th>No.</th>
+                            <th>Gender</th>
+                            <th>Name</th>
+                            <th>Classification</th>
+                            <th>Stage</th>
+                            <th>Status</th>
+                            <th>Remark</th>
+                            <th>Actions</th>
+                        </tr>
+                        {% if events|length == 0 %}
+                            <tr>
+                                <td colspan="10">No events found.</td>
+                            </tr>
+                        {% else %}
+                            {% for event in events %}
+                                <tr>
+                                    <td>{{event.date_time}}</td>
+                                    <td>{{event.number}}</td>
+                                    <td>{{event.gender}}</td>
+                                    <td>{{event.name}}</td>
+                                    <td>{{event.classification}}</td>
+                                    <td>{{event.stage}}</td>
+                                    <td>{{event.status}}</td>
+                                    <td>{{event.remark}}</td>
+                                    <td>
+                                        <button class="people-event-btn"
+                                            data-number="{{event.number}}"
+                                            data-eventname="{{event.name}}">
+                                            <img src="{% static 'btnIcon/people.png' %}" style="width: 20px; height: 20px;">
+                                        </button>
+                                        <button class="edit-event-btn"
+                                            data-number="{{event.number}}"
+                                            data-eventname="{{event.name}}"
+                                            data-eventclass="{{event.classification}}"                                            
+                                            data-datetime="{{event.date_time|date:'Y-m-d\TH:i'}}" {% comment %} ex. 2026-10-07 20:30:00 to 2026-10-07T20:30{% endcomment %}
+                                            data-gender="{{event.gender}}"
+                                            data-status="{{event.status}}"
+                                            data-location="{{event.location}}"
+                                            data-stage="{{event.stage}}"
+                                            data-score="{{event.score_format}}"
+                                            data-sport="{{event.sport.sport_code}}"
+                                            data-rem="{{event.remark}}">
+                                            <img src="{% static 'btnIcon/edit.png' %}" style="width: 20px; height: 20px;">
+                                        </button>
+                                        <button class="del-event-btn" data-number="{{event.number}}" data-eventname="{{event.name}}">
+                                            <img src="{% static 'btnIcon/delete.png' %}" style="width: 20px; height: 20px;">
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% endif %}
+                    </table>
+                {% elif route == 'results' %}
+                    <form class="searchbar" action="{{request.path}}" method="GET">
+                        <input type="hidden" name="Action" value="findEvent">
+                        <input type="search" placeholder="Search in Results" id="result-searchbar" name="find">
+                    </form>
+                    <table>
+                        <tr>                                
+                            <th>Date & Time</th>
+                            <th>No.</th>
+                            <th>Gender</th>
+                            <th>Name</th>
+                            <th>Classification</th>
+                            <th>Stage</th>
+                            <th>Status</th>
+                            <th>Remark</th>
+                            <th>Actions</th>
+                        </tr>
+                        {% if events|length == 0 %}
+                            <tr>
+                                <td colspan="10">No events found.</td>
+                            </tr>
+                        {% else %}
+                            {% for event in events %}
+                                <tr>
+                                    <td>{{event.date_time}}</td>
+                                    <td>{{event.number}}</td>
+                                    <td>{{event.gender}}</td>
+                                    <td>{{event.name}}</td>
+                                    <td>{{event.classification}}</td>
+                                    <td>{{event.stage}}</td>
+                                    <td>{{event.status}}</td>
+                                    <td>{{event.remark}}</td>
+                                    <td>
+                                        <button class="edit-result-btn"
+                                            data-number="{{event.number}}"
+                                            data-eventname="{{event.name}}">
+                                            <img src="{% static 'btnIcon/edit.png' %}" style="width: 20px; height: 20px;">
+                                        </button>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                        {% endif %}
+                    </table>                
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <div style="margin-top: 20px;">
+        <form method="POST" action="{% url 'logout' %}">
+        {% csrf_token %}<button type="submit">Log Out</button>
+        </form>
+    </div>
+</body>
+
+<script>
+    fetch('{% static 'csv/countries.csv' %}')
+    .then(response => response.text())
+    .then(csv => {
+        const lines = csv.trim().split('\n');
+        document.querySelectorAll('#country').forEach(select => {
+            lines.slice(1).forEach(line => {
+                const match = line.match(/^([^,]+),(".*?"|[^,]+)/);
+                if (!match) return;
+
+                const code = match[1];
+                const country = match[2].replace(/^"|"$/g, '');
+                const option = document.createElement('option');
+                option.value = code;
+                option.textContent = country;
+                select.appendChild(option);
+            });
+        });
+        document.querySelectorAll('#country-filter').forEach(select => {
+            lines.slice(1).forEach(line => {
+                const match = line.match(/^([^,]+),(".*?"|[^,]+)/);
+                if (!match) return;
+
+                const code = match[1];
+                const country = match[2].replace(/^"|"$/g, '');
+                const option = document.createElement('option');
+                option.value = code;
+                option.textContent = country;
+                select.appendChild(option);
+            });
+        });
+    });
+
+    document.querySelectorAll('.edit-athlete-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            document.querySelector('#edit-athlete-popup #e-bib').value = button.dataset.bib;
+
+            document.querySelector('#edit-athlete-popup #email').value = button.dataset.email;
+            document.querySelector('#edit-athlete-popup #firstname').value = button.dataset.firstname;
+            document.querySelector('#edit-athlete-popup #lastname').value = button.dataset.lastname;
+            document.querySelector('#edit-athlete-popup #gender').value = button.dataset.gender;
+            document.querySelector('#edit-athlete-popup #dob').value = button.dataset.dob;
+            document.querySelector('#edit-athlete-popup #country').value = button.dataset.country;
+            document.querySelector('#edit-athlete-popup #bib').value = button.dataset.bib;
+            document.querySelector('#edit-athlete-popup #phone').value = button.dataset.phone;
+            document.querySelector('#edit-athlete-popup #classification').value = button.dataset.classification;
+            document.querySelector('#edit-athlete-popup #rem').value = button.dataset.rem;
+
+            document.querySelector('#edit-athlete-popup').showModal();
+        });
+    });
+
+    document.querySelectorAll('.del-athlete-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            document.querySelector('#del-athlete-popup #d-bib').value = button.dataset.bib;
+
+            document.querySelector('#del-athlete-popup #firstname').textContent = button.dataset.firstname;
+            document.querySelector('#del-athlete-popup #lastname').textContent = button.dataset.lastname;
+            document.querySelector('#del-athlete-popup #bib').textContent = button.dataset.bib;
+            document.querySelector('#del-athlete-popup').showModal()
+        });
+    });
+
+    document.querySelectorAll('.edit-event-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            document.querySelector('#edit-event-popup #e-number').value = button.dataset.number;
+            {% comment %} document.querySelector('#edit-location').value = mapLocation; {% endcomment %}
+
+            document.querySelector('#edit-event-popup #number').value = button.dataset.number;
+            document.querySelector('#edit-event-popup #eventname').value = button.dataset.eventname;
+            document.querySelector('#edit-event-popup #eventclass').value = button.dataset.eventclass;
+            document.querySelector('#edit-event-popup #datetime').value = button.dataset.datetime;
+            document.querySelector('#edit-event-popup #eventgender').value = button.dataset.gender;
+            document.querySelector('#edit-event-popup #status').value = button.dataset.status;
+            document.querySelector('#edit-event-popup #edit-map').value = button.dataset.location;
+            document.querySelector('#edit-event-popup #stage').value = button.dataset.stage;
+            document.querySelector('#edit-event-popup #score').value = button.dataset.score;
+            document.querySelector('#edit-event-popup #sport').value = button.dataset.sport;            
+            if (button.dataset.rem) {
+                document.querySelector('#edit-event-popup #rem').value = button.dataset.rem;
+            }
+            document.querySelector('#edit-event-popup').showModal();
+            console.log(button.dataset.location);
+        });
+    });
+
+    function addNoEventAthlete(tbody, athlete) {
+        const row = document.createElement('tr');
+
+        row.dataset.athleteId = athlete.id;
+
+        row.innerHTML = `
+            <td>${athlete.bib}</td>
+            <td>${athlete.firstName} ${athlete.lastName}</td>
+            <td>${athlete.gender ?? ''}</td>
+            <td>${athlete.classification ?? ''}</td>
+            <td>${athlete.country}</td>
+            <td>
+                <button type="button" class="add-athlete-btn">
+                    Add
+                </button>
+            </td>
+        `;
+
+        row.querySelector('.add-athlete-btn').addEventListener('click', () => {
+                row.remove();
+                const eventAthletes = document.querySelector('#people-event-popup #event-athletes');
+                const order = eventAthletes.children.length + 1;
+                addEventAthlete(eventAthletes, athlete, order);
+            });
+
+        tbody.appendChild(row);
+    }
+
+    function updateOrders() {
+        document.querySelectorAll('#people-event-popup #event-athletes tr').forEach((row, index) => {
+            row.children[0].textContent = index + 1;
+        });
+    }
+    function addEventAthlete(tbody, athlete, order) {
+        const row = document.createElement('tr');
+        row.dataset.athleteId = athlete.id;
+
+        row.innerHTML = `
+            <td>${order}</td>
+            <td>${athlete.bib}</td>
+            <td>${athlete.firstName} ${athlete.lastName}</td>
+            <td>${athlete.gender ?? ''}</td>
+            <td>${athlete.classification ?? ''}</td>
+            <td>${athlete.country}</td>
+            <td>
+                <button type="button" class="remove-athlete-btn">
+                    Remove
+                </button>
+            </td>
+        `;
+
+        row.querySelector('.remove-athlete-btn').addEventListener('click', () => {
+
+                row.remove();
+
+                const noEventAthletes =
+                    document.querySelector(
+                        '#people-event-popup #no-event-athletes'
+                    );
+
+                addNoEventAthlete(noEventAthletes, athlete);
+
+                updateOrders();
+            });
+
+        tbody.appendChild(row);
+    }
+
+    document.querySelectorAll('.people-event-btn').forEach(button => {
+        button.addEventListener('click', () => {
+
+            const popup = document.querySelector('#people-event-popup');
+
+            popup.querySelector('#number').value = button.dataset.number;
+            popup.querySelector('#number2').textContent = button.dataset.number;
+            popup.querySelector('#eventname').textContent = button.dataset.eventname;
+
+            const eventAthletes = popup.querySelector('#event-athletes');
+
+            const noEventAthletes = popup.querySelector('#no-event-athletes');
+
+            eventAthletes.innerHTML = '';
+            noEventAthletes.innerHTML = '';
+
+            fetch(`/manage/events/${button.dataset.number}/participants/`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+
+                    data.eventAths.forEach((athlete, index) => {
+                        addEventAthlete(eventAthletes,athlete,index + 1);
+                    });
+
+                    data.noEventAths.forEach(athlete => {
+                        addNoEventAthlete(noEventAthletes, athlete);
+                    });
+
+                })
+                .catch(error => {
+                    console.error(error);
+                });
+
+            popup.showModal();
+        });
+    });
+
+    document.querySelector('#people-event-popup form').addEventListener('submit', () => {
+        const selectedAthletes = document.querySelector('#people-event-popup #selected-aths');
+
+        selectedAthletes.innerHTML = '';
+        document.querySelectorAll('#people-event-popup #event-athletes tr').forEach(row => {
+                const input = document.createElement('input');
+                input.type = 'hidden';
+                input.name = 'athletes';
+                input.value = row.dataset.athleteId;
+
+                selectedAthletes.appendChild(input);
+            });
+    });
+
+    document.querySelectorAll('.del-event-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            document.querySelector('#del-event-popup #d-number').value = button.dataset.number;
+
+            document.querySelector('#del-event-popup #eventname').textContent = button.dataset.eventname;
+            document.querySelector('#del-event-popup #number').textContent = button.dataset.number;
+            document.querySelector('#del-event-popup').showModal()
+        });
+    });
+
+    function addResultAthlete(container, athlete, order, eventNumber) {
+        const form = document.createElement('form');
+        form.action = window.location.pathname;
+        form.method = 'POST';
+        form.enctype = 'multipart/form-data';
+        form.className = 'result-form window';
+
+        console.log(athlete)
+        const attempt1 = athlete.attempts.find(a => a.attempt_number === 1)
+        ?? {attempt_number: 1, status: "unset", score: 0};
+        const attempt2 = athlete.attempts.find(a => a.attempt_number === 2)
+        ?? {attempt_number: 2, status: "unset", score: 0};
+        const attempt3 = athlete.attempts.find(a => a.attempt_number === 3)
+        ?? {attempt_number: 3, status: "unset", score: 0};
+        const attempt4 = athlete.attempts.find(a => a.attempt_number === 4)
+        ?? {attempt_number: 4, status: "unset", score: 0};
+        const attempt5 = athlete.attempts.find(a => a.attempt_number === 5)
+        ?? {attempt_number: 5, status: "unset", score: 0};
+        const attempt6 = athlete.attempts.find(a => a.attempt_number === 6)
+        ?? {attempt_number: 6, status: "unset", score: 0};                                   
+
+        form.innerHTML = `
+            <input type="hidden" name="csrfmiddlewaretoken" value="${document.querySelector('[name=csrfmiddlewaretoken]').value}">
+            <input type="hidden" name="Action" value="editResult">
+            <input type="hidden" name="res-number" value="${eventNumber}">
+            <input type="hidden" name="athlete-id" value="${athlete.id}">
+
+            <table class="res-ath-data">
+                <tr>
+                <th>Order</th>  
+                <th>BIB</th>
+                <th>Name</th>
+                <th>Gender</th>  
+                <th>Classification</th>
+                <th>Country</th>
+                </tr>
+                <tr>
+                    <td>${order}</td>
+                    <td>${athlete.bib}</td>
+                    <td>${athlete.firstName} ${athlete.lastName}</td>
+                    <td>${athlete.gender}</td>
+                    <td>${athlete.classification}</td>
+                    <td>${athlete.country}</td>
+                </tr>
+            </table>
+            <hr>
+            <div class="res-prm">
+                <div>
+                    <label>Point</label>
+                    <input name="point" id="point" placeholder="Enter point" value="${athlete.point}">
+                </div>
+                <div>
+                    <label>Rank</label>
+                    <input name="rank" id="rank" placeholder="Enter rank" value="${athlete.rank}">
+                </div>
+                <div>
+                    <label>Medal</label>
+                    <select name="medal" id="medal" value="${athlete.medal}">
+                        <option value="0" ${athlete.medal === 0 ? 'selected' : ''}>(unset)</option>
+                        <option value="1" ${athlete.medal === 1 ? 'selected' : ''}>Gold</option>
+                        <option value="2" ${athlete.medal === 2 ? 'selected' : ''}>Silver</option>
+                        <option value="3" ${athlete.medal === 3 ? 'selected' : ''}>Bronze</option>
+                    </select>
+                </div>
+            </div>
+            <hr>
+            <div class="form-side-separator">
+                <div class="res-attempts">
+                    <div style="border-bottom: 1px solid #3e67ad; padding-bottom: 10px;">
+                        <p>Attempt 1:</p>
+                        <label for="res-status">Status</label>
+                        <select name="status-1" id="res-status" value="${attempt1.status}">
+                            <option value="unset" ${attempt1.status === 'unset' ? 'selected' : ''}>(unset)</option>
+                            <option value="score" ${attempt1.status === 'score' ? 'selected' : ''}>Score</option>
+                            <option value="foul" ${attempt1.status === 'foul' ? 'selected' : ''}>Foul</option>
+                            <option value="pass" ${attempt1.status === 'pass' ? 'selected' : ''}>Pass</option>
+                        </select>
+                        <label for="res-score">Score</label>
+                        <input name="score-1" id="res-score" placeholder="A1 score" value="${attempt1.score}">
+                    </div>
+                    <div style="border-bottom: 1px solid #3e67ad; padding-bottom: 10px;">
+                        <p>Attempt 2:</p>
+                        <label for="res-status">Status</label>
+                        <select name="status-2" id="res-status" value="${attempt2.status}">
+                            <option value="unset" ${attempt2.status === 'unset' ? 'selected' : ''}>(unset)</option>
+                            <option value="score" ${attempt2.status === 'score' ? 'selected' : ''}>Score</option>
+                            <option value="foul" ${attempt2.status === 'foul' ? 'selected' : ''}>Foul</option>
+                            <option value="pass" ${attempt2.status === 'pass' ? 'selected' : ''}>Pass</option>
+                        </select>
+                        <label for="res-score">Score</label>
+                        <input name="score-2" id="res-score" placeholder="A2 score" value="${attempt2.score}">
+                    </div>
+                    <div style="border-bottom: 1px solid #3e67ad; padding-bottom: 10px;">
+                        <p>Attempt3:</p>
+                        <label for="res-status">Status</label>
+                        <select name="status-3" id="res-status" value="${attempt3.status}">
+                            <option value="unset" ${attempt3.status === 'unset' ? 'selected' : ''}>(unset)</option>
+                            <option value="score" ${attempt3.status === 'score' ? 'selected' : ''}>Score</option>
+                            <option value="foul" ${attempt3.status === 'foul' ? 'selected' : ''}>Foul</option>
+                            <option value="pass" ${attempt3.status === 'pass' ? 'selected' : ''}>Pass</option>
+                        </select>
+                        <label for="res-score">Score</label>
+                        <input name="score-3" id="res-score" placeholder="A3 score" value="${attempt3.score}">
+                    </div>
+                    
+                    <div>
+                        <p>Attempt 4:</p>
+                        <label for="res-status">Status</label>
+                        <select name="status-4" id="res-status" value="${attempt4.status}">
+                            <option value="unset" ${attempt4.status === 'unset' ? 'selected' : ''}>(unset)</option>
+                            <option value="score" ${attempt4.status === 'score' ? 'selected' : ''}>Score</option>
+                            <option value="foul" ${attempt4.status === 'foul' ? 'selected' : ''}>Foul</option>
+                            <option value="pass" ${attempt4.status === 'pass' ? 'selected' : ''}>Pass</option>
+                        </select>
+                        <label for="res-score">Score</label>
+                        <input name="score-4" id="res-score" placeholder="A4 score" value="${attempt4.score}">
+                    </div>
+                    <div>
+                        <p>Attempt 5:</p>
+                        <label for="res-status">Status</label>
+                        <select name="status-5" id="res-status" value="${attempt5.status}">
+                            <option value="unset" ${attempt5.status === 'unset' ? 'selected' : ''}>(unset)</option>
+                            <option value="score" ${attempt5.status === 'score' ? 'selected' : ''}>Score</option>
+                            <option value="foul" ${attempt5.status === 'foul' ? 'selected' : ''}>Foul</option>
+                            <option value="pass" ${attempt5.status === 'pass' ? 'selected' : ''}>Pass</option>
+                        </select>
+                        <label for="res-score">Score</label>
+                        <input name="score-5" id="res-score" placeholder="A5 score" value="${attempt5.score}">
+                    </div>
+                    <div>
+                        <p>Attempt 6:</p>
+                        <label for="res-status">Status</label>
+                        <select name="status-6" id="res-status" value="${attempt6.status}">
+                            <option value="unset" ${attempt6.status === 'unset' ? 'selected' : ''}>(unset)</option>
+                            <option value="score" ${attempt6.status === 'score' ? 'selected' : ''}>Score</option>
+                            <option value="foul" ${attempt6.status === 'foul' ? 'selected' : ''}>Foul</option>
+                            <option value="pass" ${attempt6.status === 'pass' ? 'selected' : ''}>Pass</option>
+                        </select>
+                        <label for="res-score">Score</label>
+                        <input name="score-6" id="res-score" placeholder="A6 score" value="${attempt6.score}">
+                    </div>                                                             
+                </div>
+                <div class="res-best">
+                    <label>Best Score</label>
+                    <h1 name="best-score" id="best-score">${athlete.best_score}</h1>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: flex-end;">
+                <button style="margin-top: 3vh; width: 150px;" type="submit">Save</button>
+            </div>
+        `;
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const response = await fetch(form.action, {
+                method: 'POST',
+                body: new FormData(form),
+            });
+
+            if (response.ok) {
+                console.log('Saved successfully!');
+            } else {
+                console.error('Failed to save:', await response.text());
+                alert('Save failed!');
+            }
+        });
+
+        container.appendChild(form);
+    }
+
+    document.querySelectorAll('.edit-result-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            const popup = document.querySelector('#edit-result-popup')
+
+            popup.querySelector('#eventname').textContent = button.dataset.eventname;
+            popup.querySelector('#res-number2').textContent = button.dataset.number;
+
+            const resultAthletes = popup.querySelector('#res-athletes');
+            resultAthletes.replaceChildren();
+            fetch(`/manage/events/${button.dataset.number}/participants/`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    console.log('Participants:', data.eventAths.length);
+                    data.eventAths.forEach((athlete, index) => {
+                        addResultAthlete(resultAthletes,athlete,index + 1, button.dataset.number);
+                        console.log(athlete)
+                    });
+                })
+                .catch(error => {console.error(error);});
+            
+            /* if popupquerySelector('#point') {
+                popupquerySelector('#point').value = 
+            };
+            if popupquerySelector('#rank') {
+                popupquerySelector('#rank').value = 
+            };
+            if popupquerySelector('#medal') {
+                popupquerySelector('#medal').value = 
+            }; */
+
+            popup.showModal();
+        });
+    });
+
+    document.querySelectorAll('.edit-user-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            const popup = document.querySelector('#edit-user-popup');
+
+            popup.querySelector('#e-username').value = button.dataset.username;
+            popup.querySelector('#username').value = button.dataset.username;
+            popup.querySelector('#email').value = button.dataset.email;
+
+            const staffCheckbox = popup.querySelector('#staff');
+
+            staffCheckbox.checked = button.dataset.staff.toLowerCase() === 'true';
+
+            const currentIsSuperuser = {{ request.user.is_superuser|yesno:"true,false" }};
+            const currentUsername = "{{ request.user.username|escapejs }}";
+            const targetIsSuperuser = button.dataset.superuser.toLowerCase() === 'true';
+            const targetUsername = button.dataset.username;
+
+            staffCheckbox.disabled = !(
+                currentIsSuperuser &&
+                targetUsername !== currentUsername &&
+                !targetIsSuperuser
+            );
+
+            popup.showModal();
+        });
+    });
+    
+    document.querySelectorAll('.del-user-btn').forEach(button => {
+        button.addEventListener('click', () => {
+            const popup = document.querySelector('#del-user-popup')
+            popup.querySelector('#d-username').value = button.dataset.username;
+            popup.querySelector('#username2').textContent = button.dataset.username;
+            popup.showModal()
+        });
+    });
+</script>
+</html>

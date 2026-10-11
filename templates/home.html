@@ -1,0 +1,20 @@
+{% load static %}
+
+<!doctype html>
+<html>
+  <head>
+    <title>Paralympic - Home</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}" />
+  </head>
+  <body>
+    {% if request.user.is_staff %}
+    <form method="POST" action="{% url 'admin' %}">
+      {% csrf_token %}<button type="submit">Management</button>
+    </form>
+    {% endif %}
+
+    <form method="POST" action="{% url 'logout' %}">
+      {% csrf_token %}<button type="submit">Log Out</button>
+    </form>
+  </body>
+</html>

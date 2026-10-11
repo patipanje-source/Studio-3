@@ -1,0 +1,367 @@
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300..700&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap');
+
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+[hidden] {
+  display: none !important;
+}
+
+body {
+    font-family: "Quicksand", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 500;
+    font-style: normal;
+    color: #ffffff;
+    background: linear-gradient(to top, #09152a, #26406b);
+    margin: 0;
+    padding: 0;
+    height: 100vh;
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+}
+
+button {
+    font-family: "Quicksand", sans-serif;
+    font-optical-sizing: auto;
+    font-weight: 500;
+    font-style: normal;
+    padding: 10px 20px;
+    border: 1px solid #3e67ad;
+    border-radius: 5px;
+    background-color: rgb(33, 89, 185);
+    color: #ffffff;
+}
+
+button:hover {
+    background-color: #92abd6;
+}
+
+button:active {
+    background-color: #bed6ff;
+}
+
+/* .edit-athlete-btn, .del-athlete-btn,
+.people-event-btn, .edit-event-btn, .del-event-btn { */
+td button {
+    background: transparent;
+    border: 0;
+}
+
+/* .edit-athlete-btn:hover, .del-athlete-btn:hover,
+.people-event-btn:hover, .edit-event-btn:hover, .del-event-btn:hover { */
+td button:hover {
+background: #d3e3ff36;
+}
+
+
+input {
+    font-size: 16px;
+    width: 90%;
+    height: 5vh;
+    border: 1px solid #3e67ad;
+    border-radius: 5px;
+    padding-left: 10px;
+    background: #09152ab2;
+    color: #ffffff;
+    margin: 5px;
+}
+
+input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    /* accent-color: #2e7d32; */
+    cursor: pointer;
+}
+
+hr {
+    color: #3e67ad;
+}
+
+.window {
+  /*background-color: #1e322bcc;*/
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
+  background: linear-gradient(to top, #1b114d, #154494); /*ffffff77 white transparent*/
+  box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.2);
+  border-radius: 5px;
+  border: 1px solid #3e67ad;
+  width: fit-content;
+  height: fit-content;
+  padding: 5px 50px 50px 50px; /*Top, Right, Bottom, Left (TRBL)*/
+}
+
+dialog::backdrop {
+    background-color: #09152a55;
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+}
+
+dialog {
+    color: #ffffff;
+}
+
+#popup-wrapper {
+    z-index: 998;
+    position: fixed;
+    display: flex;
+    flex-direction: column;
+    width: 100vw;
+    height: 100vh;
+    justify-content: center;
+    align-items: center;
+    background-color: #09152a55;
+    backdrop-filter: blur(3px);
+    -webkit-backdrop-filter: blur(3px);
+}
+
+#wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    width: 70vw;
+    height: 80vh;
+}
+
+#container {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+}
+
+#management-wrapper {
+    display: flex;
+    flex-direction: row;
+    gap: 5px;
+    width: 100%;
+    height: 100%;
+}
+
+#nav {
+    display: flex;
+    flex-direction: column;
+    justify-content: left;
+    align-items: center;
+    margin-top: 1px;
+    width: 10vw;
+    height: 100%;
+}
+
+#nav a {
+    margin: 10px;
+    font-family: "Quicksand", sans-serif;
+    font-weight: 500;
+    font-style: normal;
+    font-size: 20px;
+    color: white;
+    width: 100%;
+    text-decoration: none;
+}
+
+#nav a:hover {
+    color: #7787a3;
+}
+
+#nav :is(
+    [data-panel="users"] a[data-mbtn="users"],
+    [data-panel="athletes"] a[data-mbtn="athletes"],
+    [data-panel="events"] a[data-mbtn="events"],
+    [data-panel="results"] a[data-mbtn="results"]
+) {
+    /* padding: 10px 20px;
+    border: 1px solid #3e67ad;
+    border-radius: 5px;
+    background: linear-gradient(to top, #1b114d, #1e64df); */
+    font-weight: 600;
+    color: #bed6ff;
+    text-decoration: underline;
+}
+
+#management-container {
+    flex: 1;
+    margin-top: 1px;
+    width: 100%;
+    height: 100%;
+    padding-top: 25px;
+}
+
+#login-container, #reg-container {
+    margin-top: 20px;
+}
+
+#login-form, #reg-form {
+    display: flex;
+    flex-direction: column;
+    column-gap: 10px;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+}
+
+#reg-form {
+    width: 30vw;
+}
+
+table {
+    margin-top: 20px;
+    width: 100%;
+    border-collapse: collapse;
+}
+
+th, td {
+    padding: 10px;
+}
+
+tbody tr {
+    background-color: #09152ab2;
+    border-bottom: 1px solid #3e67ad;
+}
+
+tbody tr:nth-of-type(even) {
+    background-color: #09152ab2;
+}
+
+tbody th {
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+.res-ath-data tbody th, .res-ath-data tbody tr {
+    background: transparent;
+    border: 0;
+}
+
+.res-ath-data tbody th {
+    font-weight: 400;
+}
+
+.res-ath-data tbody tr {
+    font-weight: 600;
+}
+
+.form-side-separator {
+    display: flex;
+    justify-content: space-between;
+}
+
+.athlete-form, .event-form {
+    display: flex;
+    flex-direction: column;
+}
+
+.athlete-form select, .event-form select, .result-form select{
+    font-size: 16px;
+    width: 90%;
+    height: 5vh;
+    border: 1px solid #3e67ad;
+    border-radius: 5px;
+    padding-left: 10px;
+    background: #09152ab2;
+    color: #ffffff;
+    margin: 5px;
+}
+
+.map-picker {
+    width: 100%;
+    height: 200px;
+    margin-top: 5px;
+    border-radius: 5px;
+    border: 1px solid #3e67ad;
+}
+
+#add-map, #edit-map {
+    font-size: 12px;
+    width: 90%;
+    height: 5vh;
+    border: 0;
+    border-radius: 5px;
+    padding-left: 10px;
+    background: transparent;
+    color: #ffffff;
+    margin: 5px;
+}
+
+.searchbar {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.searchbar select {
+    width: 10%;
+    height: 5vh;
+    border: 1px solid #3e67ad;
+    border-radius: 5px;
+    background: #09152ab2;
+    color: #ffffff;
+}
+
+.searchbar input {
+    width: 90%;
+    height: 5vh;
+}
+
+/* dialog[open] {
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+} */
+
+#edit-result-popup[open] {
+    background: linear-gradient(to top, #09152a, #26406b);
+    width: 50vw;
+    height: auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.res-prm {
+    display: flex;
+    flex-direction: row;
+}
+
+.res-attempts {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    max-width: 400px;
+}
+
+.result-form .form-side-separator {
+    max-width: 600px;
+}
+
+.res-best {
+    display: flex;
+    flex-direction: column;
+    margin-top: 10vh;
+    text-align: center;
+}
+
+.res-best label {
+    font-size: 20px;
+    font-weight: 400;
+}
+
+#res-athletes {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+}
+
+.res-btns {
+    flex-shrink: 0;
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    padding-top: 12px;
+}

@@ -16,7 +16,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from pages import views 
+from pages import views
+
+### PATHOMKANT ###
+from django.conf import settings
+from django.conf.urls.static import static
+from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -41,4 +46,25 @@ urlpatterns = [
         views.display_all_athletes,
         name='all_athletes'
     ),
+
+    ### PATHOMKANT ###
+
+    # fetchable urls (aka. api endpoints)
+    path('logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('auth/uid_check/', views.uid_check, name='uid_check'),
+    path('manage/events/<int:number>/participants/', views.event_participants, name='event_participants'),
+
+    # normal urls (aka. html pages)
+    path('', views.home_page_view, name='home'),
+    path('manage/', views.admin, name='admin', kwargs={'route': ''}),
+    path('manage/<str:route>/', views.admin, name='admin'),
+    path('login/', views.auth, name='auth', kwargs={'route': 'login'}),
+    path('register/', views.auth, name='auth', kwargs={'route': 'register'}),
+    
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(
+        settings.MEDIA_URL,
+        document_root=settings.MEDIA_ROOT
+    )

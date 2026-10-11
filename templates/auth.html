@@ -1,0 +1,97 @@
+{% load static %}
+
+<!doctype html>
+<html lang="en">
+<head>
+    <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
+    <link rel="stylesheet" href="{% static 'style.css' %}" />
+
+    <title>
+    {% if route == 'login' %}
+        Paralympic - Login
+    {% else %}
+        Paralympic - Register
+    {% endif %}
+    </title>
+</head>
+<body>
+    <div id="wrapper">
+        <center><img src="{% static 'logo.png' %}" style="width: auto; height: 100px;" /></center>
+        {% if route == 'login' %}
+
+        <div id="login-container">
+            <div class="window">
+                <form method="POST" id="login-form">
+                    {% csrf_token %}
+                    <h2>LOG IN</h2>
+                    <input type="text" id="uid_input" name="uid" placeholder="Username" maxlength="20" required /><br /><br />
+                    <input type="password" id="pwd_input" name="pwd" placeholder="Password" required />
+                    <p style="font-size: 14px; color: red;" id="invalid_login">
+                        {% if messages %}
+                            {% for msg in messages %}
+                                {% if msg.message == "Invalid username or password." %} {{ msg }} {% endif %}
+                            {% endfor %}
+                        {% endif %}
+                    </p>
+                    <button type="submit" id="login_button">Log In</button>
+
+                    <br /><br /><p>
+                        Don't have an account yet? <a href="{% url 'auth' route='register' %}">Register here</a>
+                    </p>
+                </form>
+            </div>
+        </div>
+
+        {% elif route == 'register' %}
+
+        <div id="reg-container">
+            <div class="window">
+                <form method="POST" id="reg-form">
+                    {% csrf_token %}
+                    <center>
+                        <h2>ACCOUNT REGISTERATION</h2>
+                        <label for="email">Email address</label><br />
+                        <input type="text" id="email_input" name="email" placeholder="Your email address." required /><br /><br />
+                        <label for="uid">Username</label><br />
+                        <input type="text" id="uid_input" name="uid" placeholder="At least 3 characters." minlength="3" maxlength="20" required /><br /><br />
+                        <label for="pwd1">Password</label><br />
+                        <input type="password" id="pwd1_input" name="pwd1" placeholder="At least 8 characters." minlength="8" required /><br /><br />
+                        <label for="pwd2">Confirm password</label><br />
+                        <input type="password" id="pwd2_input" name="pwd2" placeholder="Must match the password above." minlength="8" required /><br /><br />
+                        <button type="submit" id="reg_button">Register</button>
+
+                        <br /><br /><p>
+                            Already have an account? <a href="{% url 'auth' route='login' %}">Login</a>
+                        </p>
+                    </center>
+                </form>
+            </div>
+
+            <script>
+                const pwd1 = document.getElementById('pwd1_input')
+                const pwd2 = document.getElementById('pwd2_input')
+                pwd2.addEventListener('input', function () {
+                if (pwd2.value !== pwd1.value) {
+                    pwd2.setCustomValidity('Passwords do not match.')
+                } else {
+                    pwd2.setCustomValidity('')
+                }
+                }) // empty customValidity = no error
+                const uid = document.getElementById('uid_input')
+                uid.addEventListener('input', async function () {
+                // async because await is used
+                const res = await fetch("{% url 'uid_check' %}?uid=" + encodeURIComponent(uid.value))
+                const input_uid = await res.json()
+                if (input_uid.exists) {
+                    uid.setCustomValidity('This Login ID is already exists.')
+                } else {
+                    uid.setCustomValidity('')
+                }
+                })
+            </script>
+        </div>
+    
+    {% endif %}
+    </div>
+</body>
+</html>
