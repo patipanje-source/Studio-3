@@ -1,20 +1,97 @@
 {% load static %}
 
 <!doctype html>
-<html>
+<html lang="en">
   <head>
-    <title>Paralympic - Home</title>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#09152a" />
+    <title>Paralympic | Home</title>
     <link rel="stylesheet" href="{% static 'style.css' %}" />
   </head>
-  <body>
-    {% if request.user.is_staff %}
-    <form method="POST" action="{% url 'admin' %}">
-      {% csrf_token %}<button type="submit">Management</button>
-    </form>
-    {% endif %}
+  <body class="home-page">
+    <header class="home-header">
+      <a class="brand" href="{% url 'home' %}" aria-label="Paralympic home">
+        <span class="brand-mark" aria-hidden="true">P</span>
+        <span class="brand-name">PARALYMPIC<span class="brand-dot">.</span></span>
+      </a>
 
-    <form method="POST" action="{% url 'logout' %}">
-      {% csrf_token %}<button type="submit">Log Out</button>
-    </form>
+      <nav class="home-nav" aria-label="Main navigation">
+        <a class="nav-link nav-link-active" href="{% url 'home' %}">Home</a>
+        <a class="nav-link" href="{% url 'all_athletes' %}">Athletes</a>
+        {% if request.user.is_staff %}
+          <a class="nav-link" href="{% url 'admin' %}">Management</a>
+        {% endif %}
+      </nav>
+
+      <div class="account-area">
+        <span class="account-name">{{ request.user.username }}</span>
+        <form method="POST" action="{% url 'logout' %}">
+          {% csrf_token %}
+          <button class="logout-button" type="submit">Log out</button>
+        </form>
+      </div>
+    </header>
+
+    <main class="home-main">
+      <section class="hero-panel" aria-labelledby="welcome-title">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="status-dot"></span> SPORT · COURAGE · EXCELLENCE</p>
+          <h1 id="welcome-title">Every athlete has<br /><span>a story worth seeing.</span></h1>
+          <p class="hero-description">
+            Explore the athletes and events that make Paralympic sport extraordinary.
+            Find the people, follow the competition, and celebrate every achievement.
+          </p>
+          <div class="hero-actions">
+            <a class="primary-action" href="{% url 'all_athletes' %}">
+              Explore athletes <span aria-hidden="true">→</span>
+            </a>
+            {% if request.user.is_staff %}
+              <a class="secondary-action" href="{% url 'admin' %}">Open management</a>
+            {% endif %}
+          </div>
+        </div>
+        <div class="hero-art" aria-hidden="true">
+          <div class="orbit orbit-one"></div>
+          <div class="orbit orbit-two"></div>
+          <div class="hero-monogram">P</div>
+          <div class="hero-caption"><span>01</span><span>THE SPIRIT OF SPORT</span></div>
+        </div>
+        <div class="hero-index" aria-hidden="true">01 <span>/</span> 03</div>
+      </section>
+
+      <section class="feature-grid" aria-label="Explore the site">
+        <a class="feature-card" href="{% url 'all_athletes' %}">
+          <span class="feature-number">01 / DIRECTORY</span>
+          <span class="feature-icon" aria-hidden="true">↗</span>
+          <h2>Athletes</h2>
+          <p>Meet the competitors and discover their profiles.</p>
+          <span class="card-link">Browse directory <span aria-hidden="true">→</span></span>
+        </a>
+        <div class="feature-card feature-card-muted">
+          <span class="feature-number">02 / COMPETITION</span>
+          <span class="feature-icon" aria-hidden="true">◎</span>
+          <h2>Events</h2>
+          <p>Competition details and participant records in one place.</p>
+          {% if request.user.is_staff %}
+            <a class="card-link" href="{% url 'admin' route='events' %}">Manage events <span aria-hidden="true">→</span></a>
+          {% else %}
+            <span class="card-link card-link-static">A closer look at the action</span>
+          {% endif %}
+        </div>
+        <div class="feature-card feature-card-accent">
+          <span class="feature-number">03 / COMMUNITY</span>
+          <span class="feature-icon" aria-hidden="true">✳</span>
+          <h2>More than sport</h2>
+          <p>Strength, skill, and determination come together here.</p>
+          <span class="card-link card-link-static">Every performance matters</span>
+        </div>
+      </section>
+
+      <footer class="home-footer">
+        <span>THE SPIRIT OF PARALYMPIC SPORT</span>
+        <span>BUILT AROUND THE ATHLETES</span>
+      </footer>
+    </main>
   </body>
 </html>
