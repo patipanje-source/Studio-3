@@ -17,6 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 from pages import views
+from pages.scoring import medal_calculator
 
 ### PATHOMKANT ###
 from django.conf import settings
@@ -53,6 +54,7 @@ urlpatterns = [
     path('logout/', auth_views.LogoutView.as_view(), name='logout'),
     path('auth/uid_check/', views.uid_check, name='uid_check'),
     path('manage/events/<int:number>/participants/', views.event_participants, name='event_participants'),
+    path('manage/medal-calculator/', medal_calculator, name='medal_calculator'),
 
     # normal urls (aka. html pages)
     path('', views.home_page_view, name='home'),

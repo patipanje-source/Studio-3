@@ -585,3 +585,34 @@ tbody th {
     gap: 10px;
     padding-top: 12px;
 }
+
+/* Athlete directory */
+.athletes-page {
+    min-height: 100vh;
+    height: auto;
+    display: block;
+    padding: clamp(24px, 6vw, 72px);
+    color: #f5f8ff;
+    background: #09152a;
+    background-image: radial-gradient(ellipse at 80% 15%, #31568b55 0, transparent 40%), linear-gradient(135deg, #09152a, #102342 58%, #09152a);
+}
+
+.athletes-main { width: min(1180px, 100%); margin: 0 auto; }
+.athletes-back { color: #a9cbff; font-size: 13px; text-decoration: none; }
+.athletes-back:hover, .athletes-manage-link:hover { color: #fff; }
+.athletes-eyebrow { margin: 54px 0 12px; color: #9db8df; font-size: 10px; font-weight: 700; letter-spacing: .18em; }
+.athletes-main h1 { margin: 0; color: #fff; font-size: clamp(36px, 6vw, 62px); letter-spacing: -.05em; }
+.athletes-main h1 span { color: #8eb9ff; }
+.athletes-intro { margin: 14px 0 34px; color: #bbc9df; font-size: 15px; line-height: 1.7; }
+.athletes-table-wrap { overflow-x: auto; border: 1px solid #ffffff22; border-radius: 6px; }
+.athlete-table { min-width: 760px; margin: 0; border-collapse: collapse; width: 100%; color: #eaf1fc; }
+.athlete-table th { background: #17345a; color: #b9d3fa; text-align: left; font-size: 11px; letter-spacing: .04em; }
+.athlete-table td { color: #d8e3f3; font-size: 12px; }
+.athlete-table th, .athlete-table td { padding: 14px 16px; border-bottom: 1px solid #ffffff16; white-space: nowrap; }
+.athlete-table tbody tr { background: #ffffff06; }
+.athlete-table tbody tr:nth-child(even) { background: #ffffff0c; }
+.athletes-empty { max-width: 620px; margin-top: 34px; padding: 34px; border: 1px solid #ffffff22; border-radius: 6px; background: #ffffff09; }
+.athletes-empty-icon { color: #8eb9ff; font-size: 27px; }
+.athletes-empty h2 { margin: 16px 0 8px; color: #fff; font-size: 23px; }
+.athletes-empty p { margin: 0; color: #bbc9df; font-size: 14px; line-height: 1.7; }
+.athletes-manage-link { display: inline-block; margin-top: 20px; color: #a9cbff; font-size: 13px; font-weight: 700; text-decoration: none; }

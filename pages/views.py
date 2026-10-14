@@ -46,7 +46,7 @@ def display_athlete(request, athlete_id=None, athlete_name=None):
     
     # Check which parameter was passed from the URL
     if athlete_id is not None:
-        athlete = Athlete.objects.filter(athlete_id=athlete_id).first()
+        athlete = Athlete.objects.filter(bib=athlete_id).first()
         
     elif athlete_name is not None:
         # Search firstName or lastName (case-insensitive)
@@ -58,7 +58,7 @@ def display_athlete(request, athlete_id=None, athlete_name=None):
     if athlete:
         return HttpResponse(
             f"Found Athlete: {athlete.firstName} {athlete.lastName} <br>"
-            f"ID: {athlete.athlete_id} <br>"
+            f"ID: {athlete.bib} <br>"
             f"Country: {athlete.country} <br>"
             f"Class: {athlete.classification}"
         )

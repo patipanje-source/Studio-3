@@ -1,0 +1,138 @@
+{% load static %}
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Long Jump Medal Calculator</title>
+    <link rel="stylesheet" href="{% static 'style.css' %}">
+    <style>
+        :root { color-scheme: dark; }
+        body { min-height:100vh; margin:0; padding:32px clamp(16px,4vw,56px) 56px; background:#071321; color:#ecf3ff; font:15px/1.5 Inter,Segoe UI,Arial,sans-serif; }
+        main { max-width:1180px; margin:auto; }
+        a { color:#9bbdff; }
+        .topline { display:flex; justify-content:space-between; align-items:center; gap:16px; margin-bottom:34px; }
+        .eyebrow { color:#8fa9c9; text-transform:uppercase; letter-spacing:.16em; font-size:11px; font-weight:700; }
+        h1 { margin:8px 0 10px; font-size:clamp(30px,5vw,48px); line-height:1.08; }
+        h2 { margin:0; font-size:19px; }
+        .intro { max-width:760px; color:#adbed3; }
+        .panel { background:#101f31; border:1px solid #263b52; border-radius:18px; padding:22px; margin:18px 0; box-shadow:0 16px 42px #0002; }
+        .selector { display:flex; align-items:end; gap:12px; flex-wrap:wrap; }
+        label { display:block; color:#bac9da; font-size:12px; font-weight:700; margin:0 0 6px; }
+        select,input { box-sizing:border-box; background:#091625; color:#f4f7fb; border:1px solid #344b65; border-radius:9px; padding:10px 11px; font:inherit; }
+        select:focus,input:focus { outline:2px solid #5d91ed; outline-offset:1px; }
+        .selector select { min-width:min(420px,80vw); }
+        button,.button { display:inline-flex; align-items:center; justify-content:center; border:0; border-radius:10px; background:#7fa7f7; color:#071321; font-weight:800; padding:11px 17px; cursor:pointer; text-decoration:none; }
+        button:hover,.button:hover { background:#a3c1ff; }
+        .error,.success { border-radius:10px; padding:12px 15px; margin:14px 0; }
+        .error { background:#481d29; color:#ffd7dd; border:1px solid #a34a5d; }
+        .success { background:#123b34; color:#d2fff1; border:1px solid #317a68; }
+        .meta { color:#9eb1c7; font-size:13px; margin:8px 0 0; }
+        .athlete-card { margin-top:14px; padding:18px; border:1px solid #2b4057; border-radius:14px; background:#0b1928; }
+        .athlete-head { display:flex; justify-content:space-between; align-items:start; gap:12px; flex-wrap:wrap; }
+        .athlete-name { font-size:17px; font-weight:750; }
+        .badge { display:inline-block; padding:4px 9px; border-radius:20px; background:#1c3551; color:#c7dcff; font-size:12px; }
+        .attempt-grid { display:grid; grid-template-columns:repeat(3,minmax(150px,1fr)); gap:10px; margin-top:16px; }
+        .attempt { padding:11px; background:#112238; border:1px solid #233a55; border-radius:11px; }
+        .attempt-title { margin-bottom:8px; font-size:12px; font-weight:800; color:#c7d8ed; }
+        .attempt select,.attempt input { width:100%; margin-top:4px; }
+        .attempt input { margin-bottom:7px; }
+        .summary { display:flex; gap:10px; flex-wrap:wrap; margin-top:13px; }
+        .summary span { padding:8px 11px; border-radius:9px; background:#142941; color:#d9e7f8; font-size:13px; }
+        .form-footer { display:flex; justify-content:space-between; align-items:center; gap:12px; flex-wrap:wrap; margin-top:20px; }
+        .empty { text-align:center; color:#a9bbd0; padding:28px 10px; }
+        details { margin-top:20px; color:#aebfd2; }
+        details summary { color:#d4e3f6; cursor:pointer; font-weight:700; }
+        .messages { padding:0; list-style:none; }
+        @media(max-width:740px) { .attempt-grid { grid-template-columns:repeat(2,minmax(130px,1fr)); } .panel { padding:16px; } }
+        @media(max-width:430px) { .attempt-grid { grid-template-columns:1fr; } }
+    </style>
+</head>
+<body>
+<main>
+    <div class="topline">
+        <div class="eyebrow">Studio-3 · Officials workspace</div>
+        <a href="{% url 'admin' route='events' %}">← Back to event management</a>
+    </div>
+
+    <header>
+        <div class="eyebrow">Para Athletics · Project scoring</div>
+        <h1>Long Jump Medal Calculator</h1>
+        <p class="intro">Enter up to six attempts for a small, gender-separated T61–T64 open event. The page keeps the best legal distance, converts it to WPA Raza points, then calculates ranks and project medals.</p>
+    </header>
+
+    {% if messages %}<ul class="messages">{% for message in messages %}<li class="success">{{ message }}</li>{% endfor %}</ul>{% endif %}
+    {% if error %}<div class="error" role="alert">{{ error }}</div>{% endif %}
+
+    <section class="panel">
+        <form method="get" class="selector">
+            <div>
+                <label for="event-select">Long Jump event</label>
+                <select name="event" id="event-select" required>
+                    <option value="">Choose an event</option>
+                    {% for event in events %}
+                    <option value="{{ event.id }}" {% if selected_event.id == event.id %}selected{% endif %}>#{{ event.number }} · {{ event.name }} · {{ event.date_time|date:"M j, Y" }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <button type="submit">Load event</button>
+        </form>
+        {% if not events %}<p class="meta">No event name containing “Long Jump” found. Create the event first in Event Management.</p>{% endif %}
+        {% if selected_event %}
+        <p class="meta">{{ selected_event.name }} · Event #{{ selected_event.number }} · {{ rows|length }} participating athlete{{ rows|length|pluralize }}</p>
+        {% endif %}
+    </section>
+
+    {% if selected_event %}
+    <section class="panel">
+        <h2>Attempts and results</h2>
+        <p class="meta">For this project version, limit the event to 8 athletes or fewer so each athlete receives all six attempts. Record distances in metres to two decimal places. Choose Foul or Pass with the distance left blank.</p>
+        {% if rows %}
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" name="event_id" value="{{ selected_event.id }}">
+            {% for row in rows %}
+            <article class="athlete-card">
+                <div class="athlete-head">
+                    <div><div class="athlete-name">{{ row.athlete.firstName }} {{ row.athlete.lastName }}</div><div class="meta">Bib {{ row.athlete.bib }} · {{ row.athlete.country }} · {{ row.athlete.gender }}</div></div>
+                    <span class="badge">Sport class {{ row.athlete.classification|default:"Not set" }}</span>
+                </div>
+                <div class="attempt-grid">
+                    {% for attempt in row.attempts %}
+                    <div class="attempt">
+                        <div class="attempt-title">Attempt {{ attempt.number }}</div>
+                        <label for="distance-{{ row.athlete.id }}-{{ attempt.number }}">Distance (m)</label>
+                        <input id="distance-{{ row.athlete.id }}-{{ attempt.number }}" name="distance-{{ row.athlete.id }}-{{ attempt.number }}" type="number" min="0" step="0.01" inputmode="decimal" placeholder="e.g. 4.25" value="{{ attempt.distance }}">
+                        <label for="status-{{ row.athlete.id }}-{{ attempt.number }}">Attempt status</label>
+                        <select id="status-{{ row.athlete.id }}-{{ attempt.number }}" name="status-{{ row.athlete.id }}-{{ attempt.number }}">
+                            <option value="unset" {% if attempt.status == 'unset' %}selected{% endif %}>Not entered</option>
+                            <option value="score" {% if attempt.status == 'score' %}selected{% endif %}>Valid mark</option>
+                            <option value="foul" {% if attempt.status == 'foul' %}selected{% endif %}>Foul</option>
+                            <option value="pass" {% if attempt.status == 'pass' %}selected{% endif %}>Pass</option>
+                        </select>
+                    </div>
+                    {% endfor %}
+                </div>
+                <div class="summary">
+                    <span>Best mark: <strong>{% if row.best_metres %}{{ row.best_metres }} m{% else %}—{% endif %}</strong></span>
+                    <span>Raza points: <strong>{{ row.point|default:"—" }}</strong></span>
+                    <span>Rank: <strong>{{ row.rank }}</strong></span>
+                    <span>Medal: <strong>{{ row.medal }}</strong></span>
+                </div>
+            </article>
+            {% endfor %}
+            <div class="form-footer"><span class="meta">Saving recalculates all results for this event.</span><button type="submit">Calculate and save results</button></div>
+        </form>
+        {% else %}
+        <div class="empty">No athletes have been assigned to this event yet. Add them through Event Management → Participating Athletes.</div>
+        {% endif %}
+        <details>
+            <summary>How this project calculation works</summary>
+            <p>The official best valid jump is the raw result. The calculator applies the 2025/2026 World Para Athletics Raza points parameters for the athlete’s T61–T64 class and recorded gender. Ranks sort by unrounded points; displayed and saved points are rounded to a whole number to fit the project’s existing results table. A tie is compared using each athlete’s next-best valid attempt points. If still tied, they share rank. The top three ranks receive the project’s gold, silver, or bronze award. This open event and its medal policy are project choices, not a claim that all official competitions combine these classes or award medals this way.</p>
+            <p>Attempts are saved in centimetres (the official recording precision) in the existing result tables; the page displays them as metres. A valid mark rounds down to the nearest centimetre, as the WPA long-jump rule specifies.</p>
+        </details>
+    </section>
+    {% endif %}
+</main>
+</body>
+</html>

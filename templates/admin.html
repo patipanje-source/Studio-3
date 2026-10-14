@@ -397,6 +397,7 @@
                     <a data-mbtn="athletes" href="{% url 'admin' route='athletes' %}">Athletes</a>
                     <a data-mbtn="events" href="{% url 'admin' route='events' %}">Events</a>
                     <a data-mbtn="results" href="{% url 'admin' route='results' %}">Results</a>
+                    <a href="{% url 'medal_calculator' %}">Medal Calculator</a>
                 </div>
                 
                 {% if request.user.is_superuser %}
