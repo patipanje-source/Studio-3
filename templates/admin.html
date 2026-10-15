@@ -29,7 +29,15 @@
                     <label for="email">Email</label><br>
                     <input id="email" name="email" placeholder="Email"/>
                     
-                    <label for="staff">Staff</label><br>
+                    <label for="role">Role</label><br>
+                    <select id="role" name="role">
+                        <option value="visitor">Visitor</option>
+                        <option value="agent">Agent</option>
+                        <option value="sporter">Sporter (athlete)</option>
+                        <option value="judge">Judge</option>
+                    </select><br>
+
+                    <label for="staff">Staff (administrator)</label><br>
                     <input type="checkbox" id="staff" name="staff">
                 </div>
                 <div style="margin-top: 3vh;">
@@ -80,6 +88,14 @@
                     <select id="sport" name="sport">
                         {% for sport in sports %}
                             <option value="{{sport.sport_code}}">{{sport.sport_type}} ({{sport.sport_code}})</option>
+                        {% endfor %}
+                    </select>
+
+                    <label for="judge">Judge (optional)</label><br>
+                    <select id="judge" name="judge">
+                        <option value="">— none —</option>
+                        {% for j in judges %}
+                            <option value="{{ j.id }}">{{ j.username }}</option>
                         {% endfor %}
                     </select>
 
@@ -200,6 +216,14 @@
                     <select id="sport" name="sport">
                         {% for sport in sports %}
                             <option value="{{sport.sport_code}}">{{sport.sport_type}} ({{sport.sport_code}})</option>
+                        {% endfor %}
+                    </select>
+
+                    <label for="judge">Judge (optional)</label><br>
+                    <select id="judge" name="judge">
+                        <option value="">— none —</option>
+                        {% for j in judges %}
+                            <option value="{{ j.id }}">{{ j.username }}</option>
                         {% endfor %}
                     </select>
 
@@ -438,7 +462,7 @@
                                     <td>
                                         {%if user.is_superuser %}Admin
                                         {%elif user.is_staff %}Staff
-                                        {%else%}User
+                                        {%else%}{{ user.profile.get_role_display|default:"User" }}
                                         {%endif%}
                                     </td>
                                     <td>
@@ -447,6 +471,7 @@
                                             <button class="edit-user-btn"
                                                     data-username="{{ user.username }}"
                                                     data-email="{{ user.email }}"
+                                                    data-role="{{ user.profile.role }}"
                                                     data-staff="{{ user.is_staff }}"
                                                     data-superuser="{{ user.is_superuser }}">
                                                 <img src="{% static 'btnIcon/edit.png' %}"
@@ -457,7 +482,8 @@
                                                 <button class="edit-user-btn"
                                                         data-username="{{ user.username }}"
                                                         data-email="{{ user.email }}"
-                                                        data-staff="{{ user.is_staff }}"
+                                                        data-role="{{ user.profile.role }}"
+                                                    data-staff="{{ user.is_staff }}"
                                                         data-superuser="{{ user.is_superuser }}">
                                                     <img src="{% static 'btnIcon/edit.png' %}"
                                                         style="width: 20px; height: 20px;">
@@ -592,6 +618,7 @@
                                             data-stage="{{event.stage}}"
                                             data-score="{{event.score_format}}"
                                             data-sport="{{event.sport.sport_code}}"
+                                            data-judge="{{event.judge_id|default_if_none:''}}"
                                             data-rem="{{event.remark}}">
                                             <img src="{% static 'btnIcon/edit.png' %}" style="width: 20px; height: 20px;">
                                         </button>
@@ -734,7 +761,8 @@
             document.querySelector('#edit-event-popup #edit-map').value = button.dataset.location;
             document.querySelector('#edit-event-popup #stage').value = button.dataset.stage;
             document.querySelector('#edit-event-popup #score').value = button.dataset.score;
-            document.querySelector('#edit-event-popup #sport').value = button.dataset.sport;            
+            document.querySelector('#edit-event-popup #sport').value = button.dataset.sport;
+            document.querySelector('#edit-event-popup #judge').value = button.dataset.judge || '';
             if (button.dataset.rem) {
                 document.querySelector('#edit-event-popup #rem').value = button.dataset.rem;
             }
@@ -1086,6 +1114,7 @@
             popup.querySelector('#e-username').value = button.dataset.username;
             popup.querySelector('#username').value = button.dataset.username;
             popup.querySelector('#email').value = button.dataset.email;
+            popup.querySelector('#role').value = button.dataset.role || 'visitor';
 
             const staffCheckbox = popup.querySelector('#staff');
 

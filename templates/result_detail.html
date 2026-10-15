@@ -1,0 +1,70 @@
+{% extends "base_public.html" %}
+{% block title %}{{ event.name }}{% endblock %}
+{% block content %}
+<p class="eyebrow">Event {{ event.number }} · {{ event.sport.sport_type }} · {{ event.stage|default:"—" }} · {{ event.status }}</p>
+<h1>{{ event.name }}</h1>
+<p class="lead">{{ event.date_time|date:"l j F Y, H:i" }} · Judge: {{ event.judge.username|default:"not assigned (administrators enter results)" }}.
+Ranking is decided by <b>points</b>, never by comparing raw scores across classes.</p>
+
+{% if not rows %}
+  <div class="panel empty">No athletes are assigned to this event yet.</div>
+{% elif not editable %}
+  {# ------------------------- PUBLIC READ-ONLY VIEW ------------------------- #}
+  <div class="table-wrap"><table class="pub-table">
+    <thead><tr><th class="num">Rank</th><th>Athlete</th><th>Country</th><th>Class</th><th class="num">Best mark{% if unit %} ({{ unit }}){% endif %}</th><th class="num">Points</th><th>Medal</th></tr></thead>
+    <tbody>{% for r in rows %}
+      <tr><td class="num">{% if r.result and r.result.rank %}{{ r.result.rank }}{% else %}—{% endif %}</td>
+          <td><a href="{% url 'athlete_by_id' athlete_id=r.athlete.bib %}">{{ r.athlete.firstName }} {{ r.athlete.lastName }}</a></td>
+          <td>{{ r.athlete.country }}</td><td>{{ r.athlete.classification|default:"—" }}</td>
+          <td class="num">{{ r.best|default:"—" }}</td><td class="num">{% if r.result %}{{ r.result.point }}{% else %}—{% endif %}</td>
+          <td>{% if r.result.medal == 1 %}<span class="gold">Gold</span>{% elif r.result.medal == 2 %}<span class="silver">Silver</span>{% elif r.result.medal == 3 %}<span class="bronze">Bronze</span>{% else %}—{% endif %}</td></tr>
+    {% endfor %}</tbody></table></div>
+  {% if role == 'guest' %}<p class="small">Administrators and the assigned judge can <a href="{% url 'auth' route='login' %}">log in</a> to edit scores.</p>{% endif %}
+{% else %}
+  {# ------------------------- EDIT VIEW (admin or assigned judge) ------------------------- #}
+  {% if slots %}
+  <h2>1 · Enter scores — points, rank and medals are calculated automatically</h2>
+  <form method="post">{% csrf_token %}<input type="hidden" name="mode" value="calculate">
+    <div class="table-wrap"><table class="pub-table">
+      <thead><tr><th>Athlete</th><th>Class</th><th>Attempts ({{ unit }}) — status / value</th><th class="num">Points</th><th class="num">Rank</th></tr></thead>
+      <tbody>{% for r in rows %}
+        <tr><td>{{ r.athlete.bib }} · {{ r.athlete.firstName }} {{ r.athlete.lastName }} ({{ r.athlete.country }})</td>
+            <td>{{ r.athlete.classification|default:"—" }}</td>
+            <td><div class="attempts">{% for a in r.attempts %}
+              <div class="attempt"><select name="status-{{ r.athlete.id }}-{{ a.n }}">
+                  <option value="unset" {% if a.status == 'unset' %}selected{% endif %}>–</option>
+                  <option value="score" {% if a.status == 'score' %}selected{% endif %}>Score</option>
+                  <option value="foul" {% if a.status == 'foul' %}selected{% endif %}>Foul</option>
+                  <option value="pass" {% if a.status == 'pass' %}selected{% endif %}>Pass</option></select>
+                <input name="value-{{ r.athlete.id }}-{{ a.n }}" value="{{ a.value }}" placeholder="{{ unit }}" inputmode="decimal"></div>
+            {% endfor %}</div></td>
+            <td class="num">{% if r.result %}{{ r.result.point }}{% else %}—{% endif %}</td>
+            <td class="num">{% if r.result and r.result.rank %}{{ r.result.rank }}{% else %}—{% endif %}</td></tr>
+      {% endfor %}</tbody></table></div>
+    <p><button type="submit">Save scores &amp; calculate</button>
+       <span class="small">Fouls/passes are ignored. Needs a points-table row for the athlete's class (Django admin → Point tables).</span></p>
+  </form>
+  {% else %}
+  <div class="msg error">This event's score format is not distance or time, so use manual entry below.</div>
+  {% endif %}
+
+  <h2>2 · Edit points / rank / medal manually</h2>
+  <form method="post">{% csrf_token %}<input type="hidden" name="mode" value="manual">
+    <div class="table-wrap"><table class="pub-table">
+      <thead><tr><th>Athlete</th><th class="num">Points</th><th class="num">Rank</th><th>Medal</th></tr></thead>
+      <tbody>{% for r in rows %}
+        <tr><td>{{ r.athlete.bib }} · {{ r.athlete.firstName }} {{ r.athlete.lastName }} ({{ r.athlete.country }})</td>
+            <td class="num"><input type="number" min="0" name="point-{{ r.athlete.id }}" value="{{ r.result.point|default:0 }}"></td>
+            <td class="num"><input type="number" min="0" name="rank-{{ r.athlete.id }}" value="{{ r.result.rank|default:0 }}"></td>
+            <td><select name="medal-{{ r.athlete.id }}">
+                <option value="0" {% if not r.result or r.result.medal == 0 %}selected{% endif %}>—</option>
+                <option value="1" {% if r.result.medal == 1 %}selected{% endif %}>Gold</option>
+                <option value="2" {% if r.result.medal == 2 %}selected{% endif %}>Silver</option>
+                <option value="3" {% if r.result.medal == 3 %}selected{% endif %}>Bronze</option></select></td></tr>
+      {% endfor %}</tbody></table></div>
+    <p><button type="submit">Save manual values</button>
+       <span class="small">Running “Save scores &amp; calculate” again will overwrite manual values for this event.</span></p>
+  </form>
+{% endif %}
+<p><a href="{% url 'results' %}">← All results</a></p>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% load static %}<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <link rel="icon" type="image/x-icon" href="{% static 'favicon.ico' %}" />
+  <link rel="stylesheet" href="{% static 'public.css' %}" />
+  <title>Paralympic | {% block title %}{% endblock %}</title>
+</head>
+<body class="pub">
+  <header class="pub-header">
+    <a class="pub-brand" href="{% url 'home' %}">PARALYMPIC.</a>
+    <nav class="pub-nav" aria-label="Main navigation">
+      <a href="{% url 'home' %}" class="{% if active == 'home' %}on{% endif %}">Medals</a>
+      <a href="{% url 'events' %}" class="{% if active == 'events' %}on{% endif %}">Competition</a>
+      <a href="{% url 'all_athletes' %}" class="{% if active == 'athletes' %}on{% endif %}">Athletes</a>
+      <a href="{% url 'results' %}" class="{% if active == 'results' %}on{% endif %}">Results</a>
+      {% if request.user.is_staff %}<a href="{% url 'admin' %}">Management</a>{% endif %}
+    </nav>
+    <div class="pub-account">
+      {% if request.user.is_authenticated %}
+        <span>{{ request.user.username }}</span>
+        <form method="POST" action="{% url 'logout' %}">{% csrf_token %}<button type="submit">Log out</button></form>
+      {% else %}
+        <a class="btn ghost" href="{% url 'auth' route='login' %}">Log in</a>
+        <a class="btn" href="{% url 'auth' route='register' %}">Register</a>
+      {% endif %}
+    </div>
+  </header>
+  <main class="pub-main">
+    {% for m in messages %}<div class="msg {{ m.tags }}">{{ m }}</div>{% endfor %}
+    {% block content %}{% endblock %}
+  </main>
+</body>
+</html>

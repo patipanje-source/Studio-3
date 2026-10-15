@@ -36,10 +36,6 @@ class EditEventForm(forms.ModelForm):
         model = Event
         fields = ['location']
 
-@login_required
-def home_page_view(req):
-    return render(req, 'home.html')
-
 # The same function handles both URL patterns!
 def display_athlete(request, athlete_id=None, athlete_name=None):
     athlete = None
@@ -65,13 +61,39 @@ def display_athlete(request, athlete_id=None, athlete_name=None):
     else:
         return HttpResponse("Athlete not found in the database.")
 
+# Patipan's
+
+@login_required
+def home_page_view(req):
+    return render(req, 'home.html')
 
 def display_all_athletes(request):
     athletes = Athlete.objects.all()
+    return render(request, 'athletes.html', {'athletes': athletes})
 
-    return render(request, 'athletes.html', {
-        'athletes': athletes
-    })
+# The same function handles both URL patterns!
+def display_athlete(request, athlete_id=None, athlete_name=None):
+    athlete = None
+
+    # Check which parameter was passed from the URL
+    if athlete_id is not None:
+        athlete = Athlete.objects.filter(bib=athlete_id).first()
+
+    elif athlete_name is not None:
+        # Search firstName or lastName (case-insensitive)
+        athlete = Athlete.objects.filter(
+            Q(firstName__icontains=athlete_name) | Q(lastName__icontains=athlete_name)
+        ).first()
+
+    if athlete:
+        return HttpResponse(
+            f"Found Athlete: {athlete.firstName} {athlete.lastName} <br>"
+            f"ID: {athlete.bib} <br>"
+            f"Country: {athlete.country} <br>"
+            f"Class: {athlete.classification}"
+        )
+    else:
+        return HttpResponse("Athlete not found in the database.")
 
 ### (PATHOMKANT) LOGIN / REGISTER PAGE ###
 
@@ -96,25 +118,35 @@ def auth(req, route):
         if req.user.is_authenticated: return redirect('home')
         if req.method == 'POST':
             # (1) get data from register.html
-            uid = req.POST.get("uid")
-            pwd1 = req.POST.get("pwd1")
-            pwd2 = req.POST.get("pwd2")
-            email = req.POST.get("email")
-            #address = req.POST.get("address")
-            # (2) check data
-            if len(uid) < 3: return redirect('auth', route='register')
-            if len(pwd1) < 8: return redirect('auth', route='register')
-            if pwd2 != pwd1: return redirect('auth', route='register')
-            if User.objects.filter(username=uid).exists(): return redirect('auth', route='register')
+            uid = (req.POST.get("uid") or "").strip()
+            pwd1 = req.POST.get("pwd1") or ""
+            pwd2 = req.POST.get("pwd2") or ""
+            email = (req.POST.get("email") or "").strip().lower()
+            role = req.POST.get("role")
+            # (2) check data  (REQ 1: agent / sporter / judge / visitor)
+            if role not in dict(Profile.ROLE_CHOICES):
+                messages.error(req, "Please choose a role."); return redirect('auth', route='register')
+            if len(uid) < 3:
+                messages.error(req, "Username needs at least 3 characters."); return redirect('auth', route='register')
+            if len(pwd1) < 8:
+                messages.error(req, "Password needs at least 8 characters."); return redirect('auth', route='register')
+            if pwd2 != pwd1:
+                messages.error(req, "Passwords do not match."); return redirect('auth', route='register')
+            if User.objects.filter(username=uid).exists():
+                messages.error(req, "That username is already taken."); return redirect('auth', route='register')
             # (3) register uid (if 2)
             user = User.objects.create_user(username=uid, password=pwd1, email=email)
-            profile=Profile.objects.create(user=user) # required when register
-                #, address=address) # can be added later (required when order)
+            profile = Profile.objects.create(user=user, role=role) # required when register
+            if role == Profile.ROLE_SPORTER and email:
+                # link to the athlete record that has the same e-mail (if any, and not yet taken)
+                athlete = Athlete.objects.filter(email__iexact=email, profile__isnull=True).first()
+                if athlete:
+                    profile.athlete = athlete
+                    profile.save()
             auth_login(req, user)
-            print(f"New user registered: {uid}")
             return redirect('home')
 
-    return render(req, 'auth.html', {'route': route})
+    return render(req, 'auth.html', {'route': route, 'roles': Profile.ROLE_CHOICES})
 
 def uid_check(req): # register.html gonna fetch() this to check for uid availability
     uid = req.GET.get('uid', '').strip()
@@ -222,7 +254,7 @@ def admin(req, route):
             if country == 'all':
                 athletes = athletes.filter(Q(firstName__icontains=search) | Q(lastName__icontains=search))
             else:
-                athletes = athletes.filter(Q(country=country) & Q(firstName__icontains=search) | Q(lastName__icontains=search))
+                athletes = athletes.filter(Q(country=country) & (Q(firstName__icontains=search) | Q(lastName__icontains=search)))
 
         elif action == 'findEvent':
             search = req.GET.get('find', '').strip()
@@ -237,6 +269,9 @@ def admin(req, route):
             e.email = req.POST.get('email')
             e.is_staff = req.POST.get('staff') == 'on'
             e.save()
+            new_role = req.POST.get('role')
+            if new_role in dict(Profile.ROLE_CHOICES):
+                Profile.objects.update_or_create(user=e, defaults={'role': new_role})
         
         if action == 'delUser':
             d = User.objects.get(username=req.POST.get('d-username'))
@@ -260,7 +295,7 @@ def admin(req, route):
                 firstName=fname,
                 lastName=lname.upper(),
                 gender=gender,
-                dateOfBirth=dob,
+                dateOfBirth=dob or None,
                 classification=classi,
                 imgProfile= pfp,
                 email=email.lower(),
@@ -275,7 +310,7 @@ def admin(req, route):
             e.firstName = req.POST.get('firstname')
             e.lastName = req.POST.get('lastname')
             e.gender = req.POST.get('gender')
-            e.dateOfbirth = req.POST.get('dob')
+            e.dateOfBirth = req.POST.get('dob') or None
             e.classification = req.POST.get('classification')
             e.email = req.POST.get('email')
             e.remark = req.POST.get('rem')
@@ -300,6 +335,7 @@ def admin(req, route):
             eventclass = req.POST.get('eventclass')
             rem = req.POST.get('rem')
             raw_location = req.POST.get('add-location')
+            judge = User.objects.filter(pk=req.POST.get('judge') or None, profile__role=Profile.ROLE_JUDGE).first() # optional
             # if raw_location: longitude, latitude = raw_location.split(',')
 
             Event.objects.create(
@@ -313,7 +349,8 @@ def admin(req, route):
                 stage=stage,
                 score_format=score,
                 sport=sport,
-                remark=rem
+                remark=rem,
+                judge=judge
                 )
 
         if action == 'peopleEvent':
@@ -340,6 +377,7 @@ def admin(req, route):
             e.score_format = req.POST.get('score')
             e.sport = Sport.objects.get(sport_code=req.POST.get('sport'))
             e.remark = req.POST.get('rem') 
+            e.judge = User.objects.filter(pk=req.POST.get('judge') or None, profile__role=Profile.ROLE_JUDGE).first() # optional
             e.save()
 
         if action == 'delEvent':
@@ -394,4 +432,5 @@ def admin(req, route):
 
     return render(req, 'admin.html', {'route': route, 'users': users, 'role': role, 'athletes': athletes, 'sports':sports,
                                       'events': events, 'add_event_form': add_event_form, 'edit_event_form': edit_event_form,
-                                      'eventAths': eventAths, results: results})
+                                      'eventAths': eventAths, 'results': results,
+                                      'judges': User.objects.filter(profile__role=Profile.ROLE_JUDGE).order_by('username')})

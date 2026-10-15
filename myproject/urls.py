@@ -16,7 +16,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path
-from pages import views
+from pages import views, public_views
 from pages.scoring import medal_calculator
 
 ### PATHOMKANT ###
@@ -30,23 +30,24 @@ urlpatterns = [
     # Existing: search by ID
     path(
         'athlete/id/<int:athlete_id>/',
-        views.display_athlete,
+        public_views.display_athlete,
         name='athlete_by_id'
     ),
 
     # Existing: search by name
     path(
         'athlete/name/<str:athlete_name>/',
-        views.display_athlete,
+        public_views.display_athlete,
         name='athlete_by_name'
     ),
 
     # NEW: display all athletes
-    path(
-        'athletes/',
-        views.display_all_athletes,
-        name='all_athletes'
-    ),
+    path('athletes/', public_views.athletes_page, name='all_athletes'),
+
+    ### PUBLIC SITE (no login needed) ###
+    path('events/', public_views.events_page, name='events'),
+    path('results/', public_views.results_page, name='results'),
+    path('results/<int:number>/', public_views.result_detail, name='result_detail'),
 
     ### PATHOMKANT ###
 
@@ -57,7 +58,7 @@ urlpatterns = [
     path('manage/medal-calculator/', medal_calculator, name='medal_calculator'),
 
     # normal urls (aka. html pages)
-    path('', views.home_page_view, name='home'),
+    path('', public_views.home_page_view, name='home'),
     path('manage/', views.admin, name='admin', kwargs={'route': ''}),
     path('manage/<str:route>/', views.admin, name='admin'),
     path('login/', views.auth, name='auth', kwargs={'route': 'login'}),

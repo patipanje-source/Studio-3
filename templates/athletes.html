@@ -1,61 +1,26 @@
-{% load static %}
-
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Paralympic | Athletes</title>
-    <link rel="stylesheet" href="{% static 'style.css' %}" />
-  </head>
-  <body class="athletes-page">
-    <main class="athletes-main">
-      <a class="athletes-back" href="{% url 'home' %}">← Back to home</a>
-      <p class="athletes-eyebrow">THE PEOPLE BEHIND THE PERFORMANCE</p>
-      <h1>Athlete directory<span>.</span></h1>
-      <p class="athletes-intro">Get to know the competitors and celebrate their achievements.</p>
-
-      {% if athletes %}
-        <div class="athletes-table-wrap">
-          <table class="athlete-table">
-            <thead>
-              <tr>
-                <th>Country</th>
-                <th>Athlete ID</th>
-                <th>First name</th>
-                <th>Last name</th>
-                <th>Gender</th>
-                <th>Date of birth</th>
-                <th>Classification</th>
-                <th>Email</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for athlete in athletes %}
-                <tr>
-                  <td>{{ athlete.country }}</td>
-                  <td>{{ athlete.bib }}</td>
-                  <td>{{ athlete.firstName }}</td>
-                  <td>{{ athlete.lastName }}</td>
-                  <td>{{ athlete.gender|default:"—" }}</td>
-                  <td>{{ athlete.dateOfBirth|default:"—" }}</td>
-                  <td>{{ athlete.classification|default:"—" }}</td>
-                  <td>{{ athlete.email|default:"—" }}</td>
-                </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
-      {% else %}
-        <section class="athletes-empty" aria-labelledby="empty-title">
-          <span class="athletes-empty-icon" aria-hidden="true">◎</span>
-          <h2 id="empty-title">No athletes yet</h2>
-          <p>There aren’t any athlete records to show right now. Once records are added, they’ll appear here.</p>
-          {% if request.user.is_staff %}
-            <a class="athletes-manage-link" href="{% url 'admin' route='athletes' %}">Go to athlete management →</a>
-          {% endif %}
-        </section>
-      {% endif %}
-    </main>
-  </body>
-</html>
+{% extends "base_public.html" %}
+{% block title %}Athletes{% endblock %}
+{% block content %}
+<p class="eyebrow">The people behind the performance</p>
+<h1>Athlete directory</h1>
+<form class="toolbar" method="get">
+  <div><label for="q">Search</label><input id="q" name="q" value="{{ q }}" placeholder="name, ID, class…"></div>
+  <div><label for="c">Country</label>
+    <select id="c" name="country"><option value="">All</option>
+      {% for c in countries %}<option value="{{ c }}" {% if c == country %}selected{% endif %}>{{ c }}</option>{% endfor %}</select></div>
+  <button type="submit">Search</button>
+  <a class="btn ghost" href="?q={{ q|urlencode }}&country={{ country }}&download=csv">Download CSV</a>
+</form>
+{% if athletes %}
+<div class="table-wrap"><table class="pub-table">
+  <thead><tr><th>Country</th><th class="num">ID</th><th>First name</th><th>Last name</th><th>Gender</th><th>Date of birth</th><th>Class</th>{% if show_email %}<th>Email</th>{% endif %}<th></th></tr></thead>
+  <tbody>
+  {% for a in athletes %}
+    <tr><td>{{ a.country }}</td><td class="num">{{ a.bib }}</td><td>{{ a.firstName }}</td><td>{{ a.lastName }}</td>
+        <td>{{ a.gender|default:"—" }}</td><td>{{ a.dateOfBirth|default:"—" }}</td><td>{{ a.classification|default:"—" }}</td>
+        {% if show_email %}<td>{{ a.email|default:"—" }}</td>{% endif %}
+        <td><a href="{% url 'athlete_by_id' athlete_id=a.bib %}">Profile →</a></td></tr>
+  {% endfor %}
+  </tbody></table></div>
+{% else %}<div class="panel empty">No athletes match. {% if request.user.is_staff %}<a href="{% url 'admin' route='athletes' %}">Go to athlete management →</a>{% endif %}</div>{% endif %}
+{% endblock %}

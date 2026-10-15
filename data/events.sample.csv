@@ -1,0 +1,3 @@
+number,name,sport_code,sport_name,classification,gender,date_time,status,stage,score_format,longitude,latitude,remark
+101,Men's Long Jump,ATH,Athletics,T64,M,2026-10-20 10:00,Scheduled,Final,distance,100.5018,13.7563,SAMPLE - replace with your real schedule
+102,Women's Long Jump,ATH,Athletics,T64,F,2026-10-20 14:00,Scheduled,Final,distance,100.5018,13.7563,SAMPLE - replace with your real schedule

@@ -1,0 +1,16 @@
+{% extends "base_public.html" %}
+{% block title %}{{ athlete.firstName }} {{ athlete.lastName }}{% endblock %}
+{% block content %}
+<p class="eyebrow">{{ athlete.country }} · ID {{ athlete.bib }} · Class {{ athlete.classification|default:"—" }}</p>
+<h1>{{ athlete.firstName }} {{ athlete.lastName }}</h1>
+{% if results %}
+<div class="table-wrap"><table class="pub-table">
+  <thead><tr><th>Event</th><th class="num">Rank</th><th class="num">Points</th><th>Medal</th></tr></thead>
+  <tbody>{% for r in results %}
+    <tr><td><a href="{% url 'result_detail' number=r.event.number %}">{{ r.event.name }}</a></td>
+        <td class="num">{% if r.rank %}{{ r.rank }}{% else %}—{% endif %}</td><td class="num">{{ r.point }}</td>
+        <td>{% if r.medal == 1 %}<span class="gold">Gold</span>{% elif r.medal == 2 %}<span class="silver">Silver</span>{% elif r.medal == 3 %}<span class="bronze">Bronze</span>{% else %}—{% endif %}</td></tr>
+  {% endfor %}</tbody></table></div>
+{% else %}<div class="panel empty">No results recorded yet.</div>{% endif %}
+<p><a href="{% url 'all_athletes' %}">← All athletes</a></p>
+{% endblock %}

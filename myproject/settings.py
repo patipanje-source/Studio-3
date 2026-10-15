@@ -24,12 +24,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-t3mb%3l5lh+0b$0r$^dn*s8$r9wb(xxebsozyz0bnvka$bujk='
+SECRET_KEY = os.getenv('SECRET_KEY', 'django-insecure-dev-only-change-me')  # set SECRET_KEY in .env
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = os.getenv('DEBUG', 'True') == 'True'
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [h for h in os.getenv('ALLOWED_HOSTS', '').split(',') if h]
 
 
 # Application definition
@@ -108,7 +108,7 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
-LOGIN_URL = 'login/'
+LOGIN_URL = '/login/'
 LOGOUT_REDIRECT_URL = 'home'
 
 # Internationalization

@@ -1,0 +1,27 @@
+{% extends "base_public.html" %}
+{% block title %}Competition{% endblock %}
+{% block content %}
+<p class="eyebrow">Schedule</p>
+<h1>Competition events</h1>
+<form class="toolbar" method="get">
+  <div><label for="q">Search</label><input id="q" name="q" value="{{ q }}" placeholder="name, number, class, sport…"></div>
+  <div><label for="g">Gender</label>
+    <select id="g" name="gender"><option value="">All</option>
+      <option value="M" {% if gender == 'M' %}selected{% endif %}>Male</option>
+      <option value="F" {% if gender == 'F' %}selected{% endif %}>Female</option></select></div>
+  <button type="submit">Search</button>
+  <a class="btn ghost" href="?q={{ q|urlencode }}&gender={{ gender }}&download=csv">Download CSV</a>
+</form>
+{% if events %}
+<div class="table-wrap"><table class="pub-table">
+  <thead><tr><th>Date &amp; time</th><th class="num">No.</th><th>Event</th><th>Sport</th><th>Gender</th><th>Class</th><th>Stage</th><th>Status</th><th>Judge</th><th></th></tr></thead>
+  <tbody>
+  {% for e in events %}
+    <tr><td>{{ e.date_time|date:"D j M, H:i" }}</td><td class="num">{{ e.number }}</td><td><b>{{ e.name }}</b></td>
+        <td>{{ e.sport.sport_type }}</td><td>{{ e.gender|default:"—" }}</td><td>{{ e.classification|default:"—" }}</td>
+        <td>{{ e.stage|default:"—" }}</td><td>{{ e.status }}</td><td>{{ e.judge.username|default:"—" }}</td>
+        <td><a href="{% url 'result_detail' number=e.number %}">Results →</a></td></tr>
+  {% endfor %}
+  </tbody></table></div>
+{% else %}<div class="panel empty">No events match your search.</div>{% endif %}
+{% endblock %}

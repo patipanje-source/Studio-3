@@ -1,97 +1,47 @@
-{% load static %}
+{% extends "base_public.html" %}
+{% block title %}Medal table{% endblock %}
+{% block content %}
+<p class="eyebrow">Competition results summary</p>
+<h1>Medal table</h1>
+<p class="lead">Medals are awarded from the final ranking by <b>points</b> in each event. Open to everyone — no account needed.</p>
 
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="theme-color" content="#09152a" />
-    <title>Paralympic | Home</title>
-    <link rel="stylesheet" href="{% static 'style.css' %}" />
-  </head>
-  <body class="home-page">
-    <header class="home-header">
-      <a class="brand" href="{% url 'home' %}" aria-label="Paralympic home">
-        <span class="brand-mark" aria-hidden="true">P</span>
-        <span class="brand-name">PARALYMPIC<span class="brand-dot">.</span></span>
-      </a>
+<div class="stats">
+  <div class="stat"><span class="gold">Gold</span><b>{{ totals.gold }}</b></div>
+  <div class="stat"><span class="silver">Silver</span><b>{{ totals.silver }}</b></div>
+  <div class="stat"><span class="bronze">Bronze</span><b>{{ totals.bronze }}</b></div>
+  <div class="stat"><span>Total medals</span><b>{{ totals.total }}</b></div>
+</div>
 
-      <nav class="home-nav" aria-label="Main navigation">
-        <a class="nav-link nav-link-active" href="{% url 'home' %}">Home</a>
-        <a class="nav-link" href="{% url 'all_athletes' %}">Athletes</a>
-        {% if request.user.is_staff %}
-          <a class="nav-link" href="{% url 'admin' %}">Management</a>
-        {% endif %}
-      </nav>
+{% if table %}
+<div class="table-wrap">
+  <table class="pub-table">
+    <thead><tr><th class="num">#</th><th>Country</th><th class="num gold">Gold</th><th class="num silver">Silver</th><th class="num bronze">Bronze</th><th class="num">Total</th><th class="num">Points</th></tr></thead>
+    <tbody>
+    {% for r in table %}
+      <tr><td class="num">{{ r.position }}</td><td><b>{{ r.country }}</b></td>
+          <td class="num">{{ r.gold }}</td><td class="num">{{ r.silver }}</td><td class="num">{{ r.bronze }}</td>
+          <td class="num"><b>{{ r.total }}</b></td><td class="num">{{ r.points }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% else %}
+  <div class="panel empty">No medals have been awarded yet. Results will appear here as soon as they are entered.</div>
+{% endif %}
 
-      <div class="account-area">
-        <span class="account-name">{{ request.user.username }}</span>
-        <form method="POST" action="{% url 'logout' %}">
-          {% csrf_token %}
-          <button class="logout-button" type="submit">Log out</button>
-        </form>
-      </div>
-    </header>
-
-    <main class="home-main">
-      <section class="hero-panel" aria-labelledby="welcome-title">
-        <div class="hero-copy">
-          <p class="eyebrow"><span class="status-dot"></span> SPORT · COURAGE · EXCELLENCE</p>
-          <h1 id="welcome-title">Every athlete has<br /><span>a story worth seeing.</span></h1>
-          <p class="hero-description">
-            Explore the athletes and events that make Paralympic sport extraordinary.
-            Find the people, follow the competition, and celebrate every achievement.
-          </p>
-          <div class="hero-actions">
-            <a class="primary-action" href="{% url 'all_athletes' %}">
-              Explore athletes <span aria-hidden="true">→</span>
-            </a>
-            {% if request.user.is_staff %}
-              <a class="secondary-action" href="{% url 'admin' %}">Open management</a>
-            {% endif %}
-          </div>
-        </div>
-        <div class="hero-art" aria-hidden="true">
-          <div class="orbit orbit-one"></div>
-          <div class="orbit orbit-two"></div>
-          <div class="hero-monogram">P</div>
-          <div class="hero-caption"><span>01</span><span>THE SPIRIT OF SPORT</span></div>
-        </div>
-        <div class="hero-index" aria-hidden="true">01 <span>/</span> 03</div>
-      </section>
-
-      <section class="feature-grid" aria-label="Explore the site">
-        <a class="feature-card" href="{% url 'all_athletes' %}">
-          <span class="feature-number">01 / DIRECTORY</span>
-          <span class="feature-icon" aria-hidden="true">↗</span>
-          <h2>Athletes</h2>
-          <p>Meet the competitors and discover their profiles.</p>
-          <span class="card-link">Browse directory <span aria-hidden="true">→</span></span>
-        </a>
-        <div class="feature-card feature-card-muted">
-          <span class="feature-number">02 / COMPETITION</span>
-          <span class="feature-icon" aria-hidden="true">◎</span>
-          <h2>Events</h2>
-          <p>Competition details and participant records in one place.</p>
-          {% if request.user.is_staff %}
-            <a class="card-link" href="{% url 'admin' route='events' %}">Manage events <span aria-hidden="true">→</span></a>
-          {% else %}
-            <span class="card-link card-link-static">A closer look at the action</span>
-          {% endif %}
-        </div>
-        <div class="feature-card feature-card-accent">
-          <span class="feature-number">03 / COMMUNITY</span>
-          <span class="feature-icon" aria-hidden="true">✳</span>
-          <h2>More than sport</h2>
-          <p>Strength, skill, and determination come together here.</p>
-          <span class="card-link card-link-static">Every performance matters</span>
-        </div>
-      </section>
-
-      <footer class="home-footer">
-        <span>THE SPIRIT OF PARALYMPIC SPORT</span>
-        <span>BUILT AROUND THE ATHLETES</span>
-      </footer>
-    </main>
-  </body>
-</html>
+{% if latest %}
+<h2>Latest medallists</h2>
+<div class="table-wrap">
+  <table class="pub-table">
+    <thead><tr><th>Event</th><th>Medal</th><th>Athlete</th><th>Country</th><th class="num">Points</th></tr></thead>
+    <tbody>
+    {% for r in latest %}
+      <tr><td><a href="{% url 'result_detail' number=r.event.number %}">{{ r.event.name }}</a></td>
+          <td class="{% if r.medal == 1 %}gold{% elif r.medal == 2 %}silver{% else %}bronze{% endif %}">{% if r.medal == 1 %}Gold{% elif r.medal == 2 %}Silver{% else %}Bronze{% endif %}</td>
+          <td>{{ r.athlete.firstName }} {{ r.athlete.lastName }}</td><td>{{ r.athlete.country }}</td><td class="num">{{ r.point }}</td></tr>
+    {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+{% endblock %}

@@ -52,12 +52,21 @@
                         <h2>ACCOUNT REGISTERATION</h2>
                         <label for="email">Email address</label><br />
                         <input type="text" id="email_input" name="email" placeholder="Your email address." required /><br /><br />
+                        <label for="role">I am registering as</label><br />
+                        <select id="role" name="role" required>
+                            {% for value, label in roles %}
+                                <option value="{{ value }}">{{ label }}</option>
+                            {% endfor %}
+                        </select><br /><br />
                         <label for="uid">Username</label><br />
                         <input type="text" id="uid_input" name="uid" placeholder="At least 3 characters." minlength="3" maxlength="20" required /><br /><br />
                         <label for="pwd1">Password</label><br />
                         <input type="password" id="pwd1_input" name="pwd1" placeholder="At least 8 characters." minlength="8" required /><br /><br />
                         <label for="pwd2">Confirm password</label><br />
                         <input type="password" id="pwd2_input" name="pwd2" placeholder="Must match the password above." minlength="8" required /><br /><br />
+                        {% for msg in messages %}
+                            <p style="font-size: 14px; color: red;">{{ msg }}</p>
+                        {% endfor %}
                         <button type="submit" id="reg_button">Register</button>
 
                         <br /><br /><p>

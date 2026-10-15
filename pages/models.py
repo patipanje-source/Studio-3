@@ -36,7 +36,22 @@ class Athlete(models.Model):
     def __str__(self): return f"{self.firstName} {self.lastName} ({self.country})"
          
 class Profile(models.Model):
+    ROLE_AGENT = 'agent'
+    ROLE_SPORTER = 'sporter'
+    ROLE_JUDGE = 'judge'
+    ROLE_VISITOR = 'visitor'
+    # 'admin' is NOT a self-register role: admins are users with is_staff / is_superuser
+    ROLE_CHOICES = [
+        (ROLE_AGENT, 'Agent'),
+        (ROLE_SPORTER, 'Sporter (athlete)'),
+        (ROLE_JUDGE, 'Judge'),
+        (ROLE_VISITOR, 'Visitor'),
+    ]
+
     user = models.OneToOneField(User, on_delete=models.CASCADE) # profile.user
+    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default=ROLE_VISITOR)
+    # a sporter account can be linked to its Athlete record (matched by e-mail at register time)
+    athlete = models.OneToOneField('Athlete', null=True, blank=True, on_delete=models.SET_NULL, related_name='profile')
     # 'null' - can be added later in DB | 'blank' is for validation for blank field in forms
     def __str__(self): return str(self.user) # func to display object as something (like str(self.user)) in Django Admin Page
 
@@ -57,7 +72,9 @@ class Event(models.Model):
     score_format = models.CharField(max_length=500, null=True, blank=True)
     sport = models.ForeignKey(Sport, on_delete=models.CASCADE, related_name='events')
     remark = models.CharField(max_length=100, null=True, blank=True)
-    
+    # requirement 3: the judge of an event is OPTIONAL
+    judge = models.ForeignKey(User, null=True, blank=True, on_delete=models.SET_NULL, related_name='judged_events')
+
     def __str__(self): return self.name
 
 class ParticipatingAthlete(models.Model):
@@ -89,3 +106,30 @@ class Attempt(models.Model):
                 name='unique_attempt'
             ),
         ]
+
+
+class PointTable(models.Model):
+    """
+    Parameters of the points formula (ERD tables FIELDPOINT + TRACKPOINT merged into one).
+    points = a * exp(-exp(b - c * performance))
+    performance = metres (field) or seconds (track).
+    `event` is matched as a lowercase substring of Event.name (e.g. 'long jump').
+    """
+    KIND_FIELD = 'field'
+    KIND_TRACK = 'track'
+    KIND_CHOICES = [(KIND_FIELD, 'Field (distance)'), (KIND_TRACK, 'Track (time)')]
+
+    kind = models.CharField(max_length=5, choices=KIND_CHOICES)
+    event = models.CharField(max_length=50, help_text="lowercase name fragment, e.g. 'long jump'")
+    classification = models.CharField(max_length=20)
+    gender = models.CharField(max_length=5, help_text="'men' or 'women'")
+    a = models.FloatField()
+    b = models.FloatField()
+    c = models.FloatField()
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['kind', 'event', 'classification', 'gender'], name='unique_point_row'),
+        ]
+
+    def __str__(self): return f"{self.event} {self.classification} {self.gender}"

@@ -1,0 +1,44 @@
+/* Public pages (home / events / athletes / results). Separate from style.css so the
+   login + management pages keep their own look. */
+:root { color-scheme: dark; --bg:#071321; --panel:#101f31; --line:#263b52; --text:#ecf3ff; --muted:#9eb1c7; --accent:#7fa7f7; --gold:#f2c94c; --silver:#c0c7d1; --bronze:#cd8a4b; }
+* { box-sizing: border-box; }
+body.pub { margin:0; background:var(--bg); color:var(--text); font:15px/1.5 Inter,"Segoe UI",Arial,sans-serif; }
+.pub a { color:#9bbdff; }
+.pub-header { display:flex; align-items:center; gap:20px; flex-wrap:wrap; padding:14px clamp(16px,4vw,56px); border-bottom:1px solid var(--line); background:#09182a; position:sticky; top:0; z-index:5; }
+.pub-brand { font-weight:800; letter-spacing:.12em; color:var(--text) !important; text-decoration:none; }
+.pub-nav { display:flex; gap:6px; flex:1; flex-wrap:wrap; }
+.pub-nav a { padding:7px 12px; border-radius:8px; text-decoration:none; color:var(--muted); }
+.pub-nav a:hover, .pub-nav a.on { background:#16304d; color:var(--text); }
+.pub-account { display:flex; gap:10px; align-items:center; color:var(--muted); font-size:13px; }
+.pub-account form { margin:0; }
+.btn, .pub button { display:inline-flex; align-items:center; border:0; border-radius:9px; background:var(--accent); color:#071321 !important; font-weight:800; padding:9px 15px; cursor:pointer; text-decoration:none; font:inherit; font-weight:800; }
+.btn:hover, .pub button:hover { background:#a3c1ff; }
+.btn.ghost { background:transparent; border:1px solid var(--line); color:var(--text) !important; }
+.pub-main { max-width:1180px; margin:0 auto; padding:30px clamp(16px,4vw,56px) 60px; }
+.eyebrow { color:var(--muted); text-transform:uppercase; letter-spacing:.16em; font-size:11px; font-weight:700; }
+h1 { margin:6px 0 8px; font-size:clamp(28px,5vw,44px); line-height:1.1; }
+h2 { font-size:19px; margin:28px 0 10px; }
+.lead { color:var(--muted); max-width:720px; }
+.panel { background:var(--panel); border:1px solid var(--line); border-radius:16px; padding:18px; margin:16px 0; }
+.toolbar { display:flex; gap:10px; flex-wrap:wrap; align-items:end; margin:18px 0; }
+.toolbar label { display:block; font-size:12px; color:var(--muted); font-weight:700; margin-bottom:4px; }
+.pub input, .pub select { background:#091625; color:var(--text); border:1px solid #344b65; border-radius:9px; padding:9px 11px; font:inherit; }
+.table-wrap { overflow-x:auto; border:1px solid var(--line); border-radius:14px; }
+table.pub-table { width:100%; border-collapse:collapse; min-width:620px; }
+.pub-table th, .pub-table td { padding:10px 12px; text-align:left; border-bottom:1px solid #1c3047; white-space:nowrap; }
+.pub-table th { background:#0c1b2d; color:#b9c9dd; font-size:12px; text-transform:uppercase; letter-spacing:.08em; }
+.pub-table tr:last-child td { border-bottom:0; }
+.pub-table td.num, .pub-table th.num { text-align:right; font-variant-numeric:tabular-nums; }
+.gold { color:var(--gold); font-weight:800; } .silver { color:var(--silver); font-weight:800; } .bronze { color:var(--bronze); font-weight:800; }
+.stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:12px; margin:22px 0; }
+.stat { background:var(--panel); border:1px solid var(--line); border-radius:14px; padding:14px 16px; }
+.stat b { display:block; font-size:30px; line-height:1.1; }
+.msg { border-radius:10px; padding:11px 14px; margin:14px 0; }
+.msg.error { background:#481d29; color:#ffd7dd; border:1px solid #a34a5d; }
+.msg.success { background:#123b34; color:#d2fff1; border:1px solid #317a68; }
+.empty { text-align:center; color:var(--muted); padding:30px 10px; }
+.attempts { display:flex; gap:6px; flex-wrap:wrap; }
+.attempt { display:flex; flex-direction:column; gap:4px; }
+.attempt input { width:84px; } .attempt select { width:84px; padding:6px; }
+.small { font-size:12px; color:var(--muted); }
+.pub-table input[type=number] { width:80px; }
